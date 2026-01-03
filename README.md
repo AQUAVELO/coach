@@ -1,38 +1,42 @@
-# 🌊 AquaCoach - Application Flask
+# 🌊 AquaCoach - Plateforme de Mise en Relation avec des Maîtres-Nageurs
 
-**AquaCoach** est une plateforme qui connecte des clients avec des maîtres-nageurs certifiés dans toute la France.
+**AquaCoach** est une application Flask qui connecte des clients avec des maîtres-nageurs certifiés partout en France.
 
-## 📋 Fonctionnalités
+## ✨ Fonctionnalités
 
-### Pour les Clients
-- ✅ Inscription rapide avec département
-- 🔍 Recherche de maîtres-nageurs dans votre département
-- 👁️ Visualisation des profils détaillés (diplômes, tarifs, disponibilités)
-- 💳 Paiement sécurisé (simulé en local)
-- 📞 Accès aux coordonnées complètes du nageur
+### 👥 Pour les Clients
+- ✅ Inscription rapide avec sélection du département
+- 🔍 Recherche de maîtres-nageurs disponibles dans votre région
+- 👁️ Consultation des profils détaillés (diplômes, tarifs, disponibilités)
+- 💳 Paiement sécurisé des frais de dossier (2€)
+- 📧 Réception d'un email de confirmation avec coordonnées du coach
+- 🎟️ Code de validation unique
 
-### Pour les Maîtres-Nageurs
+### 🏊 Pour les Maîtres-Nageurs
 - ✅ Inscription avec profil complet
 - 📸 Upload de photo de profil
-- 💰 Définition de vos tarifs
-- 📅 Gestion de vos disponibilités
-- 📧 Notification par email lors de sélection
+- 💰 Définition de vos tarifs personnalisés
+- 📅 Indication de vos disponibilités
+- 📊 Visibilité auprès des clients de votre département
 
-### Administration
-- 📊 Dashboard complet avec statistiques
-- 👥 Gestion des clients inscrits
-- 🏊 Gestion des maîtres-nageurs
-- 🤝 Suivi des connexions réalisées
+### 🔐 Panel Administrateur
+- 📊 Dashboard avec statistiques complètes
+- 👥 Gestion des clients et maîtres-nageurs
+- 🤝 Suivi des réservations
+- 📧 Notifications email automatiques
 
-## 🚀 Installation Rapide
+## 🚀 Installation
 
 ### Prérequis
 - Python 3.8 ou supérieur
+- pip (gestionnaire de paquets Python)
 
-### Installation
+### Installation rapide
 
 ```bash
-cd aquaconnect
+# Cloner le repository
+git clone https://github.com/AQUAVELO/coach.git
+cd coach
 
 # Créer un environnement virtuel
 python3 -m venv venv
@@ -50,9 +54,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
-L'application sera accessible à : **http://localhost:8080**
+L'application sera accessible sur **http://localhost:8080**
 
-### Scripts de lancement automatique
+### Scripts de lancement
 
 **macOS/Linux:**
 ```bash
@@ -61,177 +65,178 @@ chmod +x start.sh
 ```
 
 **Windows:**
-```cmd
+```bash
 start.bat
 ```
+
+## 📧 Configuration Email (Mailjet)
+
+L'application utilise Mailjet pour l'envoi d'emails. Configurez vos clés dans `app.py` :
+
+```python
+MAILJET_USERNAME = 'votre_api_key'
+MAILJET_PASSWORD = 'votre_api_secret'
+MAILJET_FROM_EMAIL = 'votre@email.com'
+ADMIN_EMAIL = 'admin@email.com'
+```
+
+## 🗄️ Base de Données
+
+L'application utilise **SQLite** (aucune configuration nécessaire). La base de données est créée automatiquement au premier lancement.
+
+### Tables :
+- `client` - Informations des clients
+- `nageur` - Informations des maîtres-nageurs  
+- `selection` - Réservations effectuées
+
+## 🎯 Utilisation
+
+### 1. Page d'Accueil
+Visitez http://localhost:8080 et choisissez votre profil :
+- **Client** : Trouver un maître-nageur
+- **Maître-Nageur** : S'inscrire pour proposer vos services
+
+### 2. Parcours Client
+1. Inscription avec vos coordonnées
+2. Sélection de votre département
+3. Choix d'un maître-nageur disponible
+4. Paiement des frais de dossier (2€ - mode démo)
+5. Réception d'un email avec les coordonnées du coach
+
+### 3. Parcours Maître-Nageur
+1. Inscription avec profil complet
+2. Upload d'une photo
+3. Définition des tarifs et disponibilités
+4. Validation et mise en ligne du profil
+
+### 4. Administration
+- URL : http://localhost:8080/admin/login
+- Username : `admin`
+- Password : `admin123`
+
+⚠️ **Pensez à changer ces identifiants en production !**
 
 ## 📁 Structure du Projet
 
 ```
-aquaconnect/
-├── app.py                 # Application Flask principale
-├── requirements.txt       # Dépendances Python
-├── start.sh / start.bat  # Scripts de lancement
+coach/
+├── app.py                      # Application Flask principale
+├── requirements.txt            # Dépendances Python
+├── .gitignore                  # Fichiers à ignorer
+├── start.sh / start.bat        # Scripts de lancement
 │
-├── instance/             # Base de données SQLite (créée automatiquement)
-│   └── aquaconnect.db
+├── instance/                   # Base de données (auto-créée)
+│   └── aquacoach.db
 │
-├── templates/            # Templates HTML
+├── templates/                  # Templates HTML
 │   ├── index.html
 │   ├── inscription_client.html
 │   ├── inscription_nageur.html
 │   ├── choix_nageur.html
 │   ├── confirmation_paiement.html
 │   ├── success.html
-│   ├── remerciements_nageur.html
-│   └── admin.html
+│   ├── admin.html
+│   └── admin_login.html
 │
-└── static/               # Fichiers statiques
-    ├── images/          # Photos de profil
-    ├── css/            # Feuilles de style
-    └── uploads/        # Photos uploadées
+└── static/                     # Fichiers statiques
+    ├── css/
+    │   └── style.css
+    ├── images/
+    └── uploads/               # Photos uploadées
 ```
-
-## 💾 Base de Données
-
-L'application utilise **SQLite** pour la base de données locale (pas besoin de configuration MySQL).
-
-### Tables principales:
-- **client** - Informations des clients
-- **nageur** - Informations des maîtres-nageurs
-- **selection** - Connexions client-nageur
-
-La base de données est créée automatiquement au premier lancement avec des données de démonstration.
-
-## 🎯 Utilisation
-
-### 1. Page d'Accueil
-- Visitez http://localhost:8080
-- Découvrez les maîtres-nageurs disponibles
-- Choisissez votre rôle (Client ou Maître-Nageur)
-
-### 2. Inscription Client
-- Remplissez le formulaire d'inscription
-- Sélectionnez votre département
-- Choisissez un maître-nageur dans votre région
-- Effectuez le paiement (simulé)
-- Recevez les coordonnées complètes
-
-### 3. Inscription Maître-Nageur
-- Remplissez votre profil complet
-- Ajoutez une photo
-- Définissez vos tarifs et disponibilités
-- Votre profil sera visible par les clients de votre département
-
-### 4. Administration
-- Accédez à http://localhost:8080/admin
-- Consultez les statistiques
-- Gérez les utilisateurs
-- Suivez les connexions réalisées
 
 ## 🔧 Configuration
 
-### Personnalisation du Port
-Par défaut, l'application tourne sur le port 8080. Pour changer :
-
+### Changer le Port
+Dans `app.py` (dernière ligne) :
 ```python
-# Dans app.py, ligne finale:
-app.run(debug=True, host='0.0.0.0', port=VOTRE_PORT)
+app.run(host='0.0.0.0', port=8080, debug=True)  # Changez 8080
 ```
 
-### Données de Démonstration
-Au premier lancement, l'application crée automatiquement:
-- 5 maîtres-nageurs du département 06
-- 5 clients du département 06
+### Mode Production
+Pour déployer en production :
+1. Changez `secret_key` dans `app.py`
+2. Désactivez `debug=True`
+3. Utilisez un serveur WSGI (Gunicorn, uWSGI)
+4. Configurez HTTPS
+5. Utilisez PostgreSQL/MySQL au lieu de SQLite
+6. Implémentez un vrai système de paiement
 
-Pour désactiver les données de démo, commentez la section correspondante dans `app.py` (fonction `init_db()`).
+## 🛡️ Sécurité
 
-## 🎨 Personnalisation
+**Important pour la production :**
+- ⚠️ Changez la clé secrète Flask
+- ⚠️ Modifiez les identifiants admin
+- ⚠️ Activez HTTPS
+- ⚠️ Configurez un vrai système de paiement
+- ⚠️ Ajoutez une protection CSRF
+- ⚠️ Validez et sanitisez toutes les entrées utilisateur
 
-### Ajouter des Départements
-Les départements sont définis dans `app.py`:
-```python
-DEPARTEMENTS = ["01", "02", ..., "95", "971", "972", ...]
-```
+## 📝 Mode Démo
 
-### Modifier le Montant du Paiement
-Dans `templates/confirmation_paiement.html`, modifiez la valeur affichée.
-
-### Changer les Couleurs
-Toutes les couleurs sont définies en CSS inline dans les templates. Cherchez les codes couleur comme `#42a5f5` pour les modifier.
+La version actuelle inclut :
+- ✅ Paiement **simulé** (pas de vraie transaction)
+- ✅ Emails **fonctionnels** (via Mailjet configuré)
+- ✅ Base de données SQLite locale
+- ✅ Authentification admin basique
 
 ## 🐛 Dépannage
 
-### L'application ne démarre pas
+### Le serveur ne démarre pas
 ```bash
-# Vérifiez que le port 8080 n'est pas utilisé
+# Vérifier si le port est utilisé
 lsof -i :8080
-
-# Si occupé, tuez le processus ou changez le port dans app.py
+# Tuer le processus si nécessaire
+kill -9 <PID>
 ```
 
 ### Erreur de base de données
 ```bash
-# Supprimez la base et relancez
-rm instance/aquaconnect.db
+# Supprimer et recréer la base
+rm instance/aquacoach.db
 python app.py
 ```
 
-### Problèmes d'upload de photos
+### Problème d'upload de photos
 ```bash
-# Vérifiez que le dossier existe
+# Créer le dossier et donner les permissions
 mkdir -p static/uploads
 chmod 755 static/uploads
 ```
 
-## 📝 Données de Test
+## 📖 Documentation Complète
 
-### Nageurs de Démonstration (Département 06)
-1. **Léa Martin** - BEESAN - 35€/séance
-2. **Lucas Dubois** - BPJEPS - 30€/séance
-3. **Chloé Bernard** - BEESAN - 40€/séance
-4. **Hugo Petit** - BPJEPS - 45€/séance
-5. **Manon Roux** - BEESAN - 38€/séance
+- `QUICKSTART.md` - Guide de démarrage rapide
+- `STRIPE_CONFIG.md` - Configuration Stripe (si besoin)
+- `REPARATION_TERMINEE.md` - Notes de réparation du code
 
-### Clients de Démonstration
-- Sophie Dupont, Pierre Moreau, Marie Laurent, etc.
+## 🤝 Contribution
 
-## 🔒 Sécurité
-
-**Important pour la production:**
-- Changez la `secret_key` dans `app.py`
-- Configurez HTTPS
-- Ajoutez une vraie intégration PayPal
-- Implémentez l'authentification admin
-- Utilisez une vraie base de données (PostgreSQL/MySQL)
-
-## 🚧 Limitations de la Version Locale
-
-Cette version est conçue pour un usage local/démo:
-- ✅ Paiement PayPal **simulé**
-- ✅ Envoi d'emails **désactivé**
-- ✅ Base de données **SQLite** (pour facilité d'installation)
-- ✅ Pas d'authentification admin
-
-Pour une version production, il faudrait:
-- Intégrer réellement PayPal
-- Configurer un service d'emails (Mailjet, SendGrid)
-- Migrer vers PostgreSQL/MySQL
-- Ajouter authentification et gestion des rôles
-- Implémenter CSRF protection
-
-## 📧 Support
-
-Pour toute question ou problème, consultez les logs de l'application dans le terminal.
+Les contributions sont les bienvenues ! N'hésitez pas à :
+- Signaler des bugs
+- Proposer des améliorations
+- Soumettre des pull requests
 
 ## 📄 Licence
 
 Ce projet est fourni tel quel pour usage personnel et éducatif.
 
-## 🙏 Remerciements
+## 🙏 Support
 
-Application développée avec Flask et ❤️ pour connecter les passionnés de natation.
+Pour toute question :
+- Consultez les logs dans le terminal
+- Vérifiez la documentation dans le dossier du projet
+- Créez une issue sur GitHub
 
 ---
 
-**🌊 Bonne baignade avec AquaConnect !**
+**🌊 Développé avec Flask et ❤️ pour connecter les passionnés de natation !**
+
+---
+
+## 📊 Statistiques du Projet
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-3.0-green.svg)
+![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)

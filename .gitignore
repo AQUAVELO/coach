@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers système
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fichiers temporaires/backup
+*.old
+*.backup
+*_fixed.py
+*_backup.py
+app.py.broken
+
+# Uploads et logs
+*.log
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Configuration locale
+.env
+config.local.py
+
+# Documentation temporaire
+RESOLUTION_*.md
+PROBLEME_*.md
+

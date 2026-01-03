@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Réussi - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Retour à l'accueil</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Success Section -->
+    <section class="section">
+        <div class="container" style="max-width: 700px; margin: 0 auto; padding: 0 20px;">
+            <div style="background: white; padding: 4rem 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); text-align: center;">
+                <!-- Success Icon -->
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 10px 30px rgba(0,188,212,0.3);">
+                    <span style="font-size: 3.5rem; color: white;">✓</span>
+                </div>
+
+                <h1 style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;">
+                    Paiement réussi !
+                </h1>
+                
+                <p style="font-size: 1.3rem; color: #333; margin-bottom: 2rem;">
+                    Merci <strong>{{ client_prenom }} {{ client_nom }}</strong> !
+                </p>
+
+                {% if code_validation %}
+                <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); padding: 1.5rem; border-radius: 12px; margin: 2rem 0; border: 2px dashed #ffc107;">
+                    <p style="margin: 0 0 0.5rem 0; color: #856404; font-weight: 600;">
+                        📧 Email de confirmation envoyé !
+                    </p>
+                    <p style="margin: 0; color: #856404; font-size: 0.95rem;">
+                        Vérifiez votre boîte de réception
+                    </p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ffc107;">
+                        <p style="margin: 0 0 0.5rem 0; color: #856404; font-size: 0.9rem;">
+                            <strong>Code de validation :</strong>
+                        </p>
+                        <p style="margin: 0; font-size: 1.8rem; font-weight: 700; letter-spacing: 3px; color: #cc3366;">
+                            {{ code_validation }}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div style="background: linear-gradient(135deg, rgba(0,188,212,0.1) 0%, rgba(0,151,167,0.1) 100%); padding: 2rem; border-radius: 12px; margin: 2rem 0;">
+                    <h2 style="color: var(--text-dark); font-size: 1.5rem; margin-bottom: 1.5rem;">
+                        Coordonnées de votre maître-nageur
+                    </h2>
+                    
+                    <div style="text-align: left; max-width: 400px; margin: 0 auto;">
+                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">
+                            <strong style="color: var(--primary-color);">{{ nageur_prenom }} {{ nageur_nom }}</strong>
+                        </p>
+                        <p style="margin-bottom: 0.75rem; color: #666;">
+                            📧 <a href="mailto:{{ nageur_email }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">{{ nageur_email }}</a>
+                        </p>
+                        <p style="margin-bottom: 0.75rem; color: #666;">
+                            📱 <a href="tel:{{ nageur_tel }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">{{ nageur_tel }}</a>
+                        </p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="tel:{{ nageur_tel }}" class="btn-primary-custom" style="text-decoration: none;">
+                        📞 Appeler maintenant
+                    </a>
+                    <a href="mailto:{{ nageur_email }}" class="btn-outline-custom" style="text-decoration: none; color: var(--primary-color); border-color: var(--primary-color);">
+                        ✉️ Envoyer un email
+                    </a>
+                </div>
+
+                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #E0E0E0;">
+                    <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                        ← Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

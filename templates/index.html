@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaCoach - Trouvez votre maître-nageur certifié</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('admin_login') }}" class="nav-link">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content animate-fade-in">
+            <h1 class="hero-title">Vitalité, Minceur, Bien-être</h1>
+            <p class="hero-subtitle">Connectez-vous avec des maîtres-nageurs certifiés pour des cours personnalisés</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('inscription_client') }}" class="btn-primary-custom">🏊 Trouver un maître-nageur</a>
+                <a href="{{ url_for('inscription_nageur') }}" class="btn-outline-custom">👨‍🏫 Devenir maître-nageur</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h2 class="section-title">Pourquoi choisir AquaCoach ?</h2>
+            <div class="features-grid">
+                <div class="feature-box animate-fade-in">
+                    <div class="feature-icon">🏊‍♂️</div>
+                    <h3 class="feature-title">Maîtres-nageurs certifiés</h3>
+                    <p class="feature-text">Tous nos professionnels sont diplômés BEESAN ou BPJEPS et expérimentés</p>
+                </div>
+                <div class="feature-box animate-fade-in">
+                    <div class="feature-icon">📍</div>
+                    <h3 class="feature-title">Proche de chez vous</h3>
+                    <p class="feature-text">Trouvez facilement un maître-nageur dans votre département</p>
+                </div>
+                <div class="feature-box animate-fade-in">
+                    <div class="feature-icon">💪</div>
+                    <h3 class="feature-title">Cours personnalisés</h3>
+                    <p class="feature-text">Des programmes adaptés à tous les niveaux et objectifs</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Maîtres-nageurs Section -->
+    <section class="section" style="background-color: #F5F5F5;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h2 class="section-title">🏊‍♂️ Nos Maîtres-Nageurs</h2>
+            
+            <div class="features-grid">
+                {% for nageur in nageurs %}
+                <div class="card-custom animate-fade-in">
+                    {% if nageur.photo %}
+                        <img src="{{ url_for('static', filename='images/' + nageur.photo) }}" alt="{{ nageur.prenom }} {{ nageur.nom }}" class="card-img-top-custom">
+                    {% else %}
+                        <div class="card-img-top-custom" style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem; font-weight: bold;">
+                            {{ nageur.prenom[0] }}{{ nageur.nom[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="card-body-custom">
+                        <h3 class="card-title-custom">{{ nageur.prenom }} {{ nageur.nom }}</h3>
+                        <p class="card-text-custom">
+                            <strong>📍</strong> {{ nageur.ville }}<br>
+                            <span class="badge-custom">{{ nageur.id }}</span>
+                        </p>
+                    </div>
+                </div>
+                {% else %}
+                <p style="text-align: center; color: #666; grid-column: 1 / -1;">Aucun maître-nageur disponible pour le moment</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section testimonials-section">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h2 class="section-title">👥 Ils nous font confiance</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                {% for client in clients[:3] %}
+                <div class="testimonial-card animate-fade-in">
+                    <p class="testimonial-text">
+                        "Excellente expérience avec AquaCoach. J'ai trouvé le maître-nageur parfait pour mes besoins !"
+                    </p>
+                    <p class="testimonial-author">{{ client.prenom }} {{ client.nom[0] }}.</p>
+                    <p class="testimonial-location">{{ client.ville }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Autres clients -->
+            <div style="margin-top: 3rem; text-align: center;">
+                <h3 style="color: #666; font-size: 1.2rem; margin-bottom: 1.5rem;">Et aussi...</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+                    {% for client in clients[3:] %}
+                    <div style="background: white; padding: 1rem 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <strong style="color: var(--primary-color);">{{ client.prenom }} {{ client.nom[0] }}.</strong>
+                        <span style="color: #999; font-size: 0.9rem; margin-left: 0.5rem;">{{ client.ville }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <h2 class="section-title">Prêt à plonger ?</h2>
+            <p style="font-size: 1.2rem; color: #666; margin-bottom: 2rem;">
+                Rejoignez des centaines de personnes qui ont déjà trouvé leur maître-nageur idéal
+            </p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('inscription_client') }}" class="btn-primary-custom">Commencer maintenant</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés
+                <a href="{{ url_for('admin_login') }}" class="footer-link">Administration</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

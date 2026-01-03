@@ -1,0 +1,819 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+import sqlite3
+import os
+from datetime import datetime
+import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+# MODE DÉMO - Stripe désactivé
+# import stripe
+
+app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)
+
+# Configuration
+DATABASE = os.path.join(app.instance_path, 'aquacoach.db')
+UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Identifiants admin (à changer en production !)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD_HASH = generate_password_hash("admin123")  # Mot de passe: admin123
+
+# Configuration Stripe (désactivée en mode démo)
+# Pour activer Stripe, décommentez ces lignes et ajoutez vos vraies clés:
+# stripe.api_key = "sk_test_VOTRE_CLE_ICI"
+# STRIPE_PUBLIC_KEY = "pk_test_VOTRE_CLE_ICI"
+
+# Configuration Mailjet (MÊMES CLÉS QUE LE PHP QUI FONCTIONNE)
+MAILJET_HOST = 'in-v3.mailjet.com'
+MAILJET_PORT = 587
+MAILJET_USERNAME = 'adf33e0c77039ed69396e3a8a07400cb'  # Anciennes clés qui marchent
+MAILJET_PASSWORD = '05906e966c8e2933b1dc8b0f8bb1e18b'
+MAILJET_FROM_EMAIL = 'jacquesverdier4@gmail.com'  # Comme dans le PHP
+MAILJET_FROM_NAME = 'AquaCoach'
+ADMIN_EMAIL = 'aqua.cannes@gmail.com'
+
+os.makedirs(app.instance_path, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+DEPARTEMENTS = [
+    "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", 
+    "16", "17", "18", "19", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", 
+    "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", 
+    "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", 
+    "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", 
+    "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", 
+    "92", "93", "94", "95", "971", "972", "973", "974", "976"
+]
+
+# ============================================
+# EMAIL FUNCTIONS
+# ============================================
+
+def send_confirmation_email(client_email, client_prenom, client_nom, nageur_prenom, nageur_nom, nageur_email, nageur_tel, nageur_ville, montant="2,00 €"):
+    """Envoie un email de confirmation au client et à l'admin - VERSION SIMPLE"""
+    print(f"\n🔔 FONCTION send_confirmation_email() APPELÉE")
+    print(f"   Client: {client_prenom} {client_nom} <{client_email}>")
+    print(f"   Nageur: {nageur_prenom} {nageur_nom}")
+    print(f"   Montant: {montant}")
+    
+    try:
+        # Génération du code de validation
+        code_validation = secrets.token_hex(4).upper()
+        
+        # Connexion SMTP
+        print(f"📤 Connexion à {MAILJET_HOST}:{MAILJET_PORT}...")
+        server = smtplib.SMTP(MAILJET_HOST, MAILJET_PORT, timeout=30)
+        server.set_debuglevel(0)
+        print(f"🔐 Démarrage TLS...")
+        server.starttls()
+        print(f"🔑 Authentification...")
+        server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+        
+        # EMAIL 1 : Au client
+        msg_client = MIMEMultipart('alternative')
+        msg_client['Subject'] = 'Confirmation de réservation - AquaCoach'
+        msg_client['From'] = f'AquaCoach <{MAILJET_FROM_EMAIL}>'
+        msg_client['To'] = client_email
+        
+        html_client = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <h2 style="color: #3fb0ac;">🌊 Merci pour votre réservation !</h2>
+            
+            <p>Bonjour <strong>{client_prenom} {client_nom}</strong>,</p>
+            
+            <p>Votre réservation a été confirmée avec <strong>{nageur_prenom} {nageur_nom}</strong>.</p>
+            
+            <div style="padding:20px;border:2px dashed #3fb0ac;background:#f4f8fb;margin:20px 0;">
+              <h3 style="text-align:center;color:#3fb0ac;">🎟️ Bon de réservation</h3>
+              <p><strong>Votre maître-nageur :</strong></p>
+              <ul>
+                <li>👤 {nageur_prenom} {nageur_nom}</li>
+                <li>📍 Ville : {nageur_ville}</li>
+                <li>📧 Email : <a href="mailto:{nageur_email}">{nageur_email}</a></li>
+                <li>📞 Téléphone : {nageur_tel}</li>
+              </ul>
+              <p><strong>Montant payé :</strong> {montant}</p>
+              <p><strong>Code de validation :</strong> <span style="font-size:1.5em;color:#cc3366;">{code_validation}</span></p>
+            </div>
+            
+            <p>Contactez votre maître-nageur pour planifier vos séances.</p>
+            <p>À très bientôt dans l'eau ! 🏊‍♂️</p>
+            <p>L'équipe AquaCoach</p>
+        </body>
+        </html>
+        """
+        
+        msg_client.attach(MIMEText(html_client, 'html', 'utf-8'))
+        
+        print(f"📧 Envoi email CLIENT vers {client_email}...")
+        server.send_message(msg_client)
+        print(f"✅ Email CLIENT envoyé avec succès")
+        
+        # EMAIL 2 : À l'admin
+        msg_admin = MIMEMultipart('alternative')
+        msg_admin['Subject'] = f'Nouveau paiement - {client_prenom} {client_nom}'
+        msg_admin['From'] = f'AquaCoach <{MAILJET_FROM_EMAIL}>'
+        msg_admin['To'] = ADMIN_EMAIL
+        
+        html_admin = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <h2 style="color: #3fb0ac;">💰 Nouveau Paiement</h2>
+            
+            <p><strong>M. {client_nom} {client_prenom}</strong> a acheté des frais de dossier ({montant}) 
+            et a choisi <strong>{nageur_prenom} {nageur_nom}</strong> comme coach.</p>
+            
+            <h3>Informations Client</h3>
+            <ul>
+                <li><strong>Nom :</strong> {client_prenom} {client_nom}</li>
+                <li><strong>Email :</strong> <a href="mailto:{client_email}">{client_email}</a></li>
+            </ul>
+            
+            <h3>Coach sélectionné</h3>
+            <ul>
+                <li><strong>Nom :</strong> {nageur_prenom} {nageur_nom}</li>
+                <li><strong>Ville :</strong> {nageur_ville}</li>
+                <li><strong>Email :</strong> <a href="mailto:{nageur_email}">{nageur_email}</a></li>
+                <li><strong>Téléphone :</strong> {nageur_tel}</li>
+            </ul>
+            
+            <h3>Transaction</h3>
+            <ul>
+                <li><strong>Montant :</strong> {montant}</li>
+                <li><strong>Code :</strong> {code_validation}</li>
+                <li><strong>Date :</strong> {datetime.now().strftime("%d/%m/%Y %H:%M")}</li>
+            </ul>
+        </body>
+        </html>
+        """
+        
+        msg_admin.attach(MIMEText(html_admin, 'html', 'utf-8'))
+        
+        print(f"📧 Envoi email ADMIN vers {ADMIN_EMAIL}...")
+        server.send_message(msg_admin)
+        print(f"✅ Email ADMIN envoyé avec succès")
+        
+        server.quit()
+        print(f"📧 Code de validation généré: {code_validation}\n")
+        
+        return code_validation
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"\n{'='*60}")
+        print(f"❌ ERREUR LORS DE L'ENVOI D'EMAIL")
+        print(f"{'='*60}")
+        print(f"Type d'erreur: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print(f"\nDétails complets:")
+        print(error_details)
+        print(f"{'='*60}\n")
+        return None
+
+# ============================================
+# AUTHENTICATION
+# ============================================
+def login_required(f):
+        
+        # Email au client
+        msg_client = MIMEMultipart('alternative')
+        msg_client['Subject'] = f'Confirmation de réservation - AquaCoach'
+        msg_client['From'] = f'{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>'
+        msg_client['To'] = client_email
+        
+        html_client = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #3fb0ac;">🌊 Merci pour votre réservation !</h2>
+                
+                <p>Bonjour <strong>{client_prenom} {client_nom}</strong>,</p>
+                
+                <p>Votre réservation avec <strong>{nageur_prenom} {nageur_nom}</strong> a été confirmée.</p>
+                
+                <div style="padding: 20px; border: 2px dashed #3fb0ac; background: #f4f8fb; margin: 20px 0; border-radius: 10px;">
+                    <h3 style="text-align: center; color: #3fb0ac; margin-top: 0;">🎟️ Bon de réservation</h3>
+                    
+                    <p><strong>Votre maître-nageur :</strong></p>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>👤 <strong>{nageur_prenom} {nageur_nom}</strong></li>
+                        <li>📍 Ville : {nageur_ville}</li>
+                        <li>📧 Email : <a href="mailto:{nageur_email}">{nageur_email}</a></li>
+                        <li>📞 Téléphone : {nageur_tel}</li>
+                    </ul>
+                    
+                    <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+                    
+                    <p><strong>Montant payé :</strong> <span style="font-size: 1.2em; color: #3fb0ac;">{montant}</span></p>
+                    
+                    <p><strong>Code de validation :</strong><br>
+                    <span style="font-size: 1.5em; color: #cc3366; font-weight: bold; letter-spacing: 2px;">{code_validation}</span></p>
+                    
+                    <p style="text-align: center; margin-top: 15px; color: #666;">
+                        📍 Conservez ce code pour votre première séance
+                    </p>
+                </div>
+                
+                <p><strong>Prochaines étapes :</strong></p>
+                <ol>
+                    <li>Contactez votre maître-nageur pour planifier vos séances</li>
+                    <li>Présentez votre code de validation lors de votre première séance</li>
+                </ol>
+                
+                <p>À très bientôt dans l'eau ! 🏊‍♂️</p>
+                
+                <p style="color: #666; font-size: 0.9em; margin-top: 30px;">
+                    L'équipe AquaCoach<br>
+                    <a href="mailto:{MAILJET_FROM_EMAIL}" style="color: #3fb0ac;">{MAILJET_FROM_EMAIL}</a>
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_client = f"""
+Bonjour {client_prenom} {client_nom},
+
+Votre réservation avec {nageur_prenom} {nageur_nom} a été confirmée.
+
+VOTRE MAÎTRE-NAGEUR :
+- Nom : {nageur_prenom} {nageur_nom}
+- Ville : {nageur_ville}
+- Email : {nageur_email}
+- Téléphone : {nageur_tel}
+
+Montant payé : {montant}
+Code de validation : {code_validation}
+
+Conservez ce code pour votre première séance.
+
+Prochaines étapes :
+1. Contactez votre maître-nageur pour planifier vos séances
+2. Présentez votre code de validation lors de votre première séance
+
+À très bientôt dans l'eau !
+
+L'équipe AquaCoach
+{MAILJET_FROM_EMAIL}
+        """
+        
+        part1 = MIMEText(text_client, 'plain', 'utf-8')
+        part2 = MIMEText(html_client, 'html', 'utf-8')
+        msg_client.attach(part1)
+        msg_client.attach(part2)
+        
+        # Préparer l'email admin AVANT l'envoi
+        msg_admin = MIMEMultipart('alternative')
+        msg_admin['Subject'] = f'💰 Nouveau paiement - {client_prenom} {client_nom}'
+        msg_admin['From'] = f'{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>'
+        msg_admin['To'] = ADMIN_EMAIL
+        
+        html_admin = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px;">
+                <div style="background: linear-gradient(135deg, #3fb0ac 0%, #2c8d89 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 24px;">💰 Nouveau Paiement Reçu</h1>
+                </div>
+                
+                <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+                    <div style="background: #e8f5f4; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #3fb0ac;">
+                        <p style="font-size: 18px; margin: 0; color: #2c5d63;">
+                            <strong>M. {client_nom} {client_prenom}</strong> a acheté 
+                            <span style="color: #3fb0ac; font-weight: bold;">des frais de dossier ({montant})</span> 
+                            et a choisi <strong style="color: #cc3366;">{nageur_prenom} {nageur_nom}</strong> comme coach.
+                        </p>
+                    </div>
+                    
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #3fb0ac; border-bottom: 2px solid #3fb0ac; padding-bottom: 10px; margin-bottom: 15px;">
+                            👤 Informations Client
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px 0; font-weight: 600; color: #666; width: 40%;">Nom complet :</td>
+                                <td style="padding: 10px 0; color: #333;"><strong>{client_prenom} {client_nom}</strong></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px 0; font-weight: 600; color: #666;">Email :</td>
+                                <td style="padding: 10px 0;">
+                                    <a href="mailto:{client_email}" style="color: #3fb0ac; text-decoration: none;">
+                                        {client_email}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #3fb0ac; border-bottom: 2px solid #3fb0ac; padding-bottom: 10px; margin-bottom: 15px;">
+                            🏊‍♂️ Coach Sélectionné
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px 0; font-weight: 600; color: #666; width: 40%;">Coach :</td>
+                                <td style="padding: 10px 0; color: #333;"><strong>{nageur_prenom} {nageur_nom}</strong></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px 0; font-weight: 600; color: #666;">Ville :</td>
+                                <td style="padding: 10px 0; color: #333;">{nageur_ville}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px 0; font-weight: 600; color: #666;">Email :</td>
+                                <td style="padding: 10px 0;">
+                                    <a href="mailto:{nageur_email}" style="color: #3fb0ac; text-decoration: none;">
+                                        {nageur_email}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px 0; font-weight: 600; color: #666;">Téléphone :</td>
+                                <td style="padding: 10px 0;">
+                                    <a href="tel:{nageur_tel}" style="color: #3fb0ac; text-decoration: none;">
+                                        {nageur_tel}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 25px 0; border: 2px dashed #ffc107;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 5px 0; font-weight: 600; color: #856404; width: 50%;">💰 Montant :</td>
+                                <td style="padding: 5px 0; color: #856404; text-align: right;"><strong style="font-size: 18px;">{montant}</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; font-weight: 600; color: #856404;">🎟️ Code validation :</td>
+                                <td style="padding: 5px 0; color: #cc3366; text-align: right; font-family: monospace;">
+                                    <strong style="font-size: 18px; letter-spacing: 2px;">{code_validation}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; font-weight: 600; color: #856404;">📅 Date :</td>
+                                <td style="padding: 5px 0; color: #856404; text-align: right;">{datetime.now().strftime('%d/%m/%Y à %H:%M')}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+                        <p style="color: #999; font-size: 14px; margin: 0;">
+                            Email automatique - AquaCoach Platform
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        part_admin = MIMEText(html_admin, 'html', 'utf-8')
+        msg_admin.attach(part_admin)
+        
+        # Envoi des 2 emails avec UNE SEULE connexion SMTP (comme le PHP)
+        print(f"📤 Connexion à {MAILJET_HOST}:{MAILJET_PORT}...")
+        server = smtplib.SMTP(MAILJET_HOST, MAILJET_PORT, timeout=30)
+        server.set_debuglevel(0)  # Mettre à 1 pour debug SMTP complet
+        print(f"🔐 Démarrage TLS...")
+        server.starttls()
+        print(f"🔑 Authentification avec {MAILJET_USERNAME[:10]}...")
+        server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+        
+        # Envoi email client
+        print(f"📧 Envoi email CLIENT vers {client_email}...")
+        server.send_message(msg_client)
+        print(f"✅ Email CLIENT envoyé avec succès à {client_email}")
+        
+        # Envoi email admin (même connexion)
+        print(f"📧 Envoi email ADMIN vers {ADMIN_EMAIL}...")
+        server.send_message(msg_admin)
+        print(f"✅ Email ADMIN envoyé avec succès à {ADMIN_EMAIL}")
+        
+        # Fermeture propre
+        server.quit()
+        print(f"📧 Code de validation généré: {code_validation}")
+        
+        return code_validation
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"\n{'='*60}")
+        print(f"❌ ERREUR LORS DE L'ENVOI D'EMAIL")
+        print(f"{'='*60}")
+        print(f"Type d'erreur: {type(e).__name__}")
+        print(f"Message: {str(e)}")
+        print(f"\nDétails complets:")
+        print(error_details)
+        print(f"{'='*60}\n")
+        return None
+
+# ============================================
+# AUTHENTICATION
+# ============================================
+
+def login_required(f):
+    """Décorateur pour protéger les routes admin"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_logged_in' not in session:
+            flash('Vous devez vous connecter pour accéder à cette page.', 'warning')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ============================================
+# DATABASE FUNCTIONS
+# ============================================
+
+def get_db():
+    """Connexion à la base de données SQLite"""
+    db = sqlite3.connect(DATABASE)
+    db.row_factory = sqlite3.Row
+    return db
+
+def init_db():
+    """Initialiser la base de données"""
+    db = get_db()
+    
+    # Table Client
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS client (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL,
+            prenom TEXT NOT NULL,
+            email TEXT NOT NULL,
+            tel TEXT,
+            ville TEXT,
+            dept TEXT,
+            date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Table Nageur
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS nageur (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT NOT NULL,
+            prenom TEXT NOT NULL,
+            email TEXT NOT NULL,
+            tel TEXT,
+            ville TEXT,
+            dept TEXT,
+            diplome TEXT,
+            presentation TEXT,
+            prix REAL,
+            dispo TEXT,
+            preference TEXT,
+            photo TEXT,
+            date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Table de liaison client-nageur (sélections)
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS selection (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER,
+            nageur_id INTEGER,
+            date_selection TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            paiement_effectue BOOLEAN DEFAULT 1,
+            payment_intent_id TEXT,
+            FOREIGN KEY (client_id) REFERENCES client (id),
+            FOREIGN KEY (nageur_id) REFERENCES nageur (id)
+        )
+    ''')
+    
+    db.commit()
+    
+    # Ajouter des données de démonstration
+    cursor = db.execute('SELECT COUNT(*) as count FROM nageur')
+    if cursor.fetchone()['count'] == 0:
+        # Insérer des nageurs de démonstration
+        nageurs_demo = [
+            ('Martin', 'Léa', 'lea.martin@email.com', '0601020304', 'Nice', '06', 'BEESAN', 'Maître-nageuse diplômée avec 5 ans d\'expérience', 35.0, 'Lundi-Vendredi 9h-18h', 'Enfants, Adultes', 'lea.jpg'),
+            ('Dubois', 'Lucas', 'lucas.dubois@email.com', '0605060708', 'Cannes', '06', 'BPJEPS', 'Spécialisé dans l\'apprentissage pour débutants', 30.0, 'Mercredi-Samedi', 'Débutants', 'lucas.jpg'),
+            ('Bernard', 'Chloé', 'chloe.bernard@email.com', '0609101112', 'Antibes', '06', 'BEESAN', 'Expérience avec les enfants en bas âge', 40.0, 'Tous les jours', 'Bébés nageurs', 'chloe.jpg'),
+            ('Petit', 'Hugo', 'hugo.petit@email.com', '0613141516', 'Grasse', '06', 'BPJEPS', 'Coach de natation sportive', 45.0, 'Lundi-Vendredi', 'Perfectionnement', 'garcon1.jpg'),
+            ('Roux', 'Manon', 'manon.roux@email.com', '0617181920', 'Menton', '06', 'BEESAN', 'Spécialiste aquagym et natation thérapeutique', 38.0, 'Variable', 'Séniors, Rééducation', 'manon.jpeg'),
+        ]
+        
+        for nageur in nageurs_demo:
+            db.execute('''
+                INSERT INTO nageur (nom, prenom, email, tel, ville, dept, diplome, presentation, prix, dispo, preference, photo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', nageur)
+        
+        # Insérer des clients de démonstration
+        clients_demo = [
+            ('Dupont', 'Sophie', 'sophie.dupont@email.com', '0621222324', 'Nice', '06'),
+            ('Moreau', 'Pierre', 'pierre.moreau@email.com', '0625262728', 'Cannes', '06'),
+            ('Laurent', 'Marie', 'marie.laurent@email.com', '0629303132', 'Antibes', '06'),
+            ('Simon', 'Antoine', 'antoine.simon@email.com', '0633343536', 'Nice', '06'),
+            ('Michel', 'Julie', 'julie.michel@email.com', '0637383940', 'Menton', '06'),
+        ]
+        
+        for client in clients_demo:
+            db.execute('''
+                INSERT INTO client (nom, prenom, email, tel, ville, dept)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', client)
+        
+        db.commit()
+    
+    db.close()
+
+# ============================================
+# ROUTES
+# ============================================
+
+@app.route('/')
+def index():
+    """Page d'accueil"""
+    db = get_db()
+    
+    # Récupérer 5 nageurs du département 06
+    nageurs = db.execute(
+        'SELECT id, nom, prenom, ville, photo FROM nageur WHERE dept = ? LIMIT 5',
+        ('06',)
+    ).fetchall()
+    
+    # Récupérer 5 clients du département 06
+    clients = db.execute(
+        'SELECT nom, prenom, ville FROM client WHERE dept = ? LIMIT 6',
+        ('06',)
+    ).fetchall()
+    
+    db.close()
+    
+    return render_template('index.html', nageurs=nageurs, clients=clients)
+
+@app.route('/inscription_client', methods=['GET'])
+def inscription_client():
+    """Formulaire d'inscription client"""
+    return render_template('inscription_client.html', departements=DEPARTEMENTS)
+
+@app.route('/submit_inscription_client', methods=['POST'])
+def submit_inscription_client():
+    """Traiter l'inscription d'un client"""
+    nom = request.form.get('nom')
+    prenom = request.form.get('prenom')
+    email = request.form.get('email')
+    tel = request.form.get('tel')
+    ville = request.form.get('ville')
+    dept = request.form.get('dept')
+    
+    db = get_db()
+    
+    try:
+        cursor = db.execute('''
+            INSERT INTO client (nom, prenom, email, tel, ville, dept)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (nom, prenom, email, tel, ville, dept))
+        
+        client_id = cursor.lastrowid
+        db.commit()
+        
+        # Stocker les infos en session
+        session['client_id'] = client_id
+        session['client_nom'] = nom
+        session['client_prenom'] = prenom
+        session['client_email'] = email
+        session['client_dept'] = dept
+        
+        db.close()
+        
+        return redirect(url_for('choix_nageur'))
+        
+    except Exception as e:
+        db.close()
+        flash(f'Erreur lors de l\'inscription : {str(e)}', 'danger')
+        return redirect(url_for('inscription_client'))
+
+@app.route('/choix_nageur', methods=['GET', 'POST'])
+def choix_nageur():
+    """Choisir un nageur dans le département"""
+    if 'client_dept' not in session:
+        flash('Veuillez d\'abord vous inscrire', 'warning')
+        return redirect(url_for('inscription_client'))
+    
+    dept = session['client_dept']
+    
+    if request.method == 'POST':
+        nageur_id = request.form.get('nageur_id')
+        
+        if nageur_id:
+            session['nageur_id'] = nageur_id
+            return redirect(url_for('confirmation_paiement'))
+        else:
+            flash('Veuillez sélectionner un nageur', 'warning')
+    
+    # Récupérer les nageurs du département
+    db = get_db()
+    nageurs = db.execute(
+        'SELECT * FROM nageur WHERE dept = ?',
+        (dept,)
+    ).fetchall()
+    db.close()
+    
+    return render_template('choix_nageur.html', nageurs=nageurs, dept=dept)
+
+@app.route('/confirmation_paiement')
+def confirmation_paiement():
+    """Page de confirmation de paiement (MODE DÉMO - pas de Stripe requis)"""
+    if 'nageur_id' not in session or 'client_id' not in session:
+        flash('Session expirée', 'danger')
+        return redirect(url_for('index'))
+    
+    # Récupérer les informations du nageur
+    db = get_db()
+    nageur = db.execute('SELECT * FROM nageur WHERE id = ?', (session['nageur_id'],)).fetchone()
+    client = db.execute('SELECT * FROM client WHERE id = ?', (session['client_id'],)).fetchone()
+    db.close()
+    
+    if not nageur or not client:
+        flash('Erreur lors de la récupération des informations', 'danger')
+        return redirect(url_for('index'))
+    
+    return render_template('confirmation_paiement.html',
+                         nageur_prenom=nageur['prenom'],
+                         nageur_nom=nageur['nom'],
+                         client_email=client['email'])
+
+@app.route('/paiement', methods=['POST'])
+def paiement():
+    """Traiter le paiement simulé (MODE DÉMO)"""
+    if 'nageur_id' not in session or 'client_id' not in session:
+        flash('Session expirée', 'danger')
+        return redirect(url_for('index'))
+    
+    # Récupérer les informations
+    db = get_db()
+    nageur = db.execute('SELECT * FROM nageur WHERE id = ?', (session['nageur_id'],)).fetchone()
+    client = db.execute('SELECT * FROM client WHERE id = ?', (session['client_id'],)).fetchone()
+    
+    # Enregistrer la sélection dans la base de données
+    db.execute('''
+        INSERT INTO selection (client_id, nageur_id, date_selection)
+        VALUES (?, ?, ?)
+    ''', (session['client_id'], session['nageur_id'], datetime.now()))
+    db.commit()
+    db.close()
+    
+    # Préparer les données pour la page de succès
+    client_prenom = client['prenom']
+    client_nom = client['nom']
+    client_email = client['email']
+    nageur_prenom = nageur['prenom']
+    nageur_nom = nageur['nom']
+    nageur_email = nageur['email']
+    nageur_tel = nageur['tel']
+    nageur_ville = nageur['ville']
+    
+    print(f"\n🚀 TENTATIVE D'ENVOI D'EMAIL...")
+    print(f"   Client: {client_prenom} {client_nom} - {client_email}")
+    print(f"   Nageur: {nageur_prenom} {nageur_nom} - {nageur_ville}")
+    
+    # Envoi des emails de confirmation
+    code_validation = send_confirmation_email(
+        client_email=client_email,
+        client_prenom=client_prenom,
+        client_nom=client_nom,
+        nageur_prenom=nageur_prenom,
+        nageur_nom=nageur_nom,
+        nageur_email=nageur_email,
+        nageur_tel=nageur_tel,
+        nageur_ville=nageur_ville,
+        montant="2,00 €"
+    )
+    
+    if code_validation:
+        flash('Un email de confirmation vous a été envoyé !', 'success')
+    else:
+        flash('Réservation enregistrée mais erreur lors de l\'envoi de l\'email.', 'warning')
+    
+    # Nettoyer la session
+    session.pop('nageur_id', None)
+    session.pop('client_id', None)
+    
+    return render_template('success.html',
+                         client_prenom=client_prenom,
+                         client_nom=client_nom,
+                         nageur_prenom=nageur_prenom,
+                         nageur_nom=nageur_nom,
+                         nageur_email=nageur_email,
+                         nageur_tel=nageur_tel,
+                         code_validation=code_validation)
+
+@app.route('/inscription_nageur', methods=['GET'])
+def inscription_nageur():
+    """Formulaire d'inscription nageur"""
+    return render_template('inscription_nageur.html', departements=DEPARTEMENTS)
+
+@app.route('/submit_inscription_nageur', methods=['POST'])
+def submit_inscription_nageur():
+    """Traiter l'inscription d'un nageur"""
+    nom = request.form.get('nom')
+    prenom = request.form.get('prenom')
+    email = request.form.get('email')
+    tel = request.form.get('tel')
+    ville = request.form.get('ville')
+    dept = request.form.get('dept')
+    diplome = request.form.get('diplome')
+    presentation = request.form.get('presentation')
+    prix = request.form.get('prix')
+    dispo = request.form.get('dispo')
+    preference = request.form.get('preference')
+    
+    # Gestion de la photo
+    photo_filename = None
+    if 'photo' in request.files:
+        photo = request.files['photo']
+        if photo and photo.filename:
+            photo_filename = f"{prenom}_{nom}_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+            photo.save(os.path.join(UPLOAD_FOLDER, photo_filename))
+    
+    db = get_db()
+    
+    try:
+        db.execute('''
+            INSERT INTO nageur (nom, prenom, email, tel, ville, dept, diplome, presentation, prix, dispo, preference, photo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, prix, dispo, preference, photo_filename))
+        
+        db.commit()
+        db.close()
+        
+        return render_template('remerciements_nageur.html', prenom=prenom, nom=nom)
+        
+    except Exception as e:
+        db.close()
+        flash(f'Erreur lors de l\'inscription : {str(e)}', 'danger')
+        return redirect(url_for('inscription_nageur'))
+
+# ============================================
+# ADMIN AUTHENTICATION ROUTES
+# ============================================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Page de connexion administrateur"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
+            session['admin_logged_in'] = True
+            session['admin_username'] = username
+            flash('Connexion réussie ! Bienvenue.', 'success')
+            return redirect(url_for('admin_index'))
+        else:
+            flash('Identifiants incorrects. Veuillez réessayer.', 'danger')
+    
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Déconnexion administrateur"""
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
+    flash('Vous avez été déconnecté avec succès.', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/admin')
+@login_required
+def admin_index():
+    """Page d'administration"""
+    db = get_db()
+    
+    clients = db.execute('SELECT * FROM client ORDER BY date_inscription DESC').fetchall()
+    nageurs = db.execute('SELECT * FROM nageur ORDER BY date_inscription DESC').fetchall()
+    selections = db.execute('''
+        SELECT s.*, c.nom as client_nom, c.prenom as client_prenom,
+               n.nom as nageur_nom, n.prenom as nageur_prenom
+        FROM selection s
+        JOIN client c ON s.client_id = c.id
+        JOIN nageur n ON s.nageur_id = n.id
+        ORDER BY s.date_selection DESC
+    ''').fetchall()
+    
+    db.close()
+    
+    return render_template('admin.html', clients=clients, nageurs=nageurs, selections=selections)
+
+# ============================================
+# INITIALISATION
+# ============================================
+
+if __name__ == '__main__':
+    init_db()
+    print("🌊 AquaConnect est prêt!")
+    print("🌐 Ouvrez votre navigateur à: http://localhost:8080")
+    app.run(debug=True, host='0.0.0.0', port=8080)

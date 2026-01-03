@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Client - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">← Retour à l'accueil</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Form Section -->
+    <section class="section">
+        <div class="container" style="max-width: 600px; margin: 0 auto; padding: 0 20px;">
+            <h1 style="text-align: center; color: var(--primary-color); font-size: 2.5rem; margin-bottom: 1rem;">
+                Inscription Client
+            </h1>
+            <p style="text-align: center; color: #666; margin-bottom: 3rem; font-size: 1.1rem;">
+                Inscrivez-vous pour trouver votre maître-nageur idéal
+            </p>
+
+            {% if message %}
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                    {{ message }}
+                </div>
+            {% endif %}
+
+            <form action="{{ url_for('submit_inscription_client') }}" method="POST" class="form-custom">
+                <label class="form-label-custom" for="nom">Nom :</label>
+                <input type="text" id="nom" name="nom" class="form-control-custom" required>
+
+                <label class="form-label-custom" for="prenom">Prénom :</label>
+                <input type="text" id="prenom" name="prenom" class="form-control-custom" required>
+
+                <label class="form-label-custom" for="email">Email :</label>
+                <input type="email" id="email" name="email" class="form-control-custom" required>
+
+                <label class="form-label-custom" for="tel">Téléphone :</label>
+                <input type="text" id="tel" name="tel" class="form-control-custom" placeholder="0612345678">
+
+                <label class="form-label-custom" for="ville">Ville :</label>
+                <input type="text" id="ville" name="ville" class="form-control-custom">
+
+                <label class="form-label-custom" for="dept">Département :</label>
+                <select id="dept" name="dept" class="form-select-custom" required>
+                    <option value="">-- Sélectionnez votre département --</option>
+                    {% for dept in departements %}
+                        <option value="{{ dept }}">{{ dept }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn-primary-custom" style="width: 100%; margin-top: 1rem;">
+                    S'inscrire
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    ← Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

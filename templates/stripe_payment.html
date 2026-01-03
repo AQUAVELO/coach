@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Sécurisé - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Retour à l'accueil</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Payment Section -->
+    <section class="section">
+        <div class="container" style="max-width: 600px; margin: 0 auto; padding: 0 20px;">
+            <div style="background: white; padding: 4rem 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1);">
+                <!-- Payment Icon -->
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 10px 30px rgba(0,188,212,0.3);">
+                        <span style="font-size: 3.5rem; color: white;">💳</span>
+                    </div>
+
+                    <h1 style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;">
+                        Paiement Sécurisé
+                    </h1>
+                    
+                    <p style="font-size: 1.1rem; color: #666; margin-bottom: 2rem;">
+                        Finalisez votre réservation avec {{ nageur_prenom }} {{ nageur_nom }}
+                    </p>
+                </div>
+
+                <!-- Payment Details -->
+                <div style="background: linear-gradient(135deg, rgba(0,188,212,0.1) 0%, rgba(0,151,167,0.1) 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="color: #666; margin-bottom: 0.5rem;">Frais de dossier</p>
+                            <p style="color: #999; font-size: 0.9rem;">Paiement unique</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin: 0;">2,00 €</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Messages -->
+                <div id="error-message" style="display: none; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                </div>
+
+                <!-- Stripe Payment Form -->
+                <form id="payment-form">
+                    <div style="margin-bottom: 2rem;">
+                        <label class="form-label-custom">Email :</label>
+                        <input type="email" id="email" class="form-control-custom" value="{{ client_email }}" required>
+                    </div>
+
+                    <div style="margin-bottom: 2rem;">
+                        <label class="form-label-custom">Informations de carte :</label>
+                        <div id="card-element" style="padding: 1rem; border: 2px solid #E0E0E0; border-radius: 8px; background: white;"></div>
+                    </div>
+
+                    <button type="submit" id="submit-button" class="btn-primary-custom" style="width: 100%; font-size: 1.2rem; padding: 1.2rem 2.5rem; position: relative;">
+                        <span id="button-text">💳 Payer 2,00 €</span>
+                        <span id="spinner" style="display: none;">
+                            <svg style="width: 24px; height: 24px; animation: spin 1s linear infinite;" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="4" fill="none" stroke-dasharray="32" stroke-dashoffset="8"></circle>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div style="margin-top: 2rem; text-align: center;">
+                        <p style="font-size: 0.9rem; color: #999;">
+                            🔒 Paiement sécurisé par <strong>Stripe</strong><br>
+                            Vos données sont chiffrées et sécurisées
+                        </p>
+                    </div>
+                </form>
+
+                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #E0E0E0; text-align: center;">
+                    <a href="{{ url_for('index') }}" style="color: #999; text-decoration: none; font-weight: 600;">
+                        Annuler et retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés
+            </p>
+        </div>
+    </footer>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        #submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .StripeElement {
+            padding: 12px;
+        }
+
+        .StripeElement--focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+        }
+
+        .StripeElement--invalid {
+            border-color: #dc3545;
+        }
+    </style>
+
+    <script>
+        // Initialiser Stripe avec votre clé publique
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+
+        // Créer l'élément de carte
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#223449',
+                    fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+                    '::placeholder': {
+                        color: '#999',
+                    },
+                },
+                invalid: {
+                    color: '#dc3545',
+                    iconColor: '#dc3545'
+                }
+            },
+            hidePostalCode: false
+        });
+
+        cardElement.mount('#card-element');
+
+        // Gérer les erreurs de validation
+        cardElement.on('change', function(event) {
+            const errorDiv = document.getElementById('error-message');
+            if (event.error) {
+                errorDiv.textContent = event.error.message;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+
+        // Gérer la soumission du formulaire
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const submitButton = document.getElementById('submit-button');
+            const buttonText = document.getElementById('button-text');
+            const spinner = document.getElementById('spinner');
+            const errorDiv = document.getElementById('error-message');
+
+            // Désactiver le bouton et afficher le spinner
+            submitButton.disabled = true;
+            buttonText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+
+            // Créer l'intention de paiement
+            try {
+                const response = await fetch('/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Confirmer le paiement
+                const {error, paymentIntent} = await stripe.confirmCardPayment(
+                    data.clientSecret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                email: document.getElementById('email').value
+                            }
+                        }
+                    }
+                );
+
+                if (error) {
+                    // Afficher l'erreur
+                    errorDiv.textContent = error.message;
+                    errorDiv.style.display = 'block';
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                } else if (paymentIntent.status === 'succeeded') {
+                    // Rediriger vers la page de succès
+                    window.location.href = '/payment-success?payment_intent=' + paymentIntent.id;
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+                submitButton.disabled = false;
+                buttonText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+

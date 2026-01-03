@@ -222,12 +222,7 @@ def init_db():
 
 @app.route('/')
 def index():
-    db = get_db()
-    # Récupérer les derniers nageurs et clients pour la page d'accueil
-    nageurs = db.execute('SELECT * FROM nageur ORDER BY date_inscription DESC LIMIT 6').fetchall()
-    clients = db.execute('SELECT * FROM client ORDER BY date_inscription DESC LIMIT 3').fetchall()
-    db.close()
-    return render_template('index.html', nageurs=nageurs, clients=clients)
+    return render_template('index.html')
 
 @app.route('/inscription_client')
 def inscription_client():

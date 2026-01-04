@@ -105,3 +105,4 @@ Le site est maintenant **100% opérationnel** avec l'envoi d'emails configuré.
 
 **Faites un test complet et dites-moi si vous recevez les emails !** 📬
 
+

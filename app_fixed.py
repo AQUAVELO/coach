@@ -426,3 +426,4 @@ if __name__ == '__main__':
     print("🌐 Ouvrez votre navigateur à: http://localhost:8080")
     app.run(host='0.0.0.0', port=8080, debug=True)
 
+

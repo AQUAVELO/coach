@@ -293,3 +293,4 @@ SetEnv SECRET_KEY votre_clé_secrète_très_longue_et_aléatoire
 
 **✅ Une fois ces étapes appliquées, les modifications admin devraient fonctionner en production !**
 
+

@@ -237,3 +237,4 @@ Si vous avez suivi toutes les étapes et que ça ne fonctionne toujours pas, con
 2. Les dernières lignes de `~/logs/error_log`
 3. Le résultat de `git ls-files | grep "\.db$"`
 
+

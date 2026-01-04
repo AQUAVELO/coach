@@ -74,3 +74,4 @@ En mode TEST, utilisez ces numéros de carte :
 - ✅ Données chiffrées de bout en bout
 - ✅ 3D Secure 2 automatique pour l'Europe
 
+

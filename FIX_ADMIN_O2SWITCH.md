@@ -194,3 +194,4 @@ Pour éviter ces problèmes à l'avenir, utilisez le script de déploiement :
 
 Ce script vérifie et corrige automatiquement les permissions à chaque déploiement !
 
+

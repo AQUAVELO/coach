@@ -144,10 +144,7 @@
         </div>
         
         <div class="reservation-info">
-            <strong>Mise en relation avec {{ count }} maître-nageur{{ 's' if count > 1 else '' }} :</strong><br>
-            {% for nageur in nageurs %}
-                <span style="color: var(--primary-color); font-weight: 600;">{{ nageur.prenom }} {{ nageur.nom }}</span>{% if not loop.last %}, {% endif %}
-            {% endfor %}
+            <strong>Paiement pour mise en relation</strong>
         </div>
         
         <div class="price-card">

@@ -634,6 +634,8 @@ def confirmation_paiement():
         "confirmation_paiement.html",
         nageur_prenom=nageur["prenom"],
         nageur_nom=nageur["nom"],
+        nageur_tel=nageur["tel"],
+        nageur_email=nageur["email"],
         client_email=client["email"],
     )
 

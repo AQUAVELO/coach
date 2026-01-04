@@ -80,6 +80,12 @@
                                         <strong style="color: var(--primary-color);">📍 Ville :</strong> {{ nageur.ville }}
                                     </p>
 
+                                    {% if nageur.tel %}
+                                    <p style="margin-bottom: 0.75rem; color: #666;">
+                                        <strong style="color: var(--primary-color);">📞 Téléphone :</strong> {{ nageur.tel }}
+                                    </p>
+                                    {% endif %}
+
                                     {% if nageur.diplome %}
                                     <p style="margin-bottom: 0.75rem; color: #666;">
                                         <strong style="color: var(--primary-color);">🎓 Diplôme :</strong> 

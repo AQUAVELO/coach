@@ -135,6 +135,63 @@
         .reservation-info strong {
             color: #2c5d63;
         }
+        
+        .nageur-contact-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid #66bb6a;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(102, 187, 106, 0.2);
+        }
+        
+        .nageur-contact-box h3 {
+            color: #2e7d32;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .nageur-contact-box p {
+            margin: 10px 0;
+            color: #1b5e20;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        .contact-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .contact-info p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2c5d63;
+        }
+        
+        .contact-info strong {
+            color: #2e7d32;
+            min-width: 100px;
+        }
+        
+        .contact-info a {
+            color: #3fb0ac;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -146,6 +203,31 @@
         <div class="reservation-info">
             <strong>Réservation avec :</strong><br>
             {{ nageur_prenom }} {{ nageur_nom }}
+        </div>
+        
+        <!-- Box de contact du nageur -->
+        <div class="nageur-contact-box">
+            <h3>
+                <span>🏊‍♂️</span>
+                Votre Maître-Nageur a été informé !
+            </h3>
+            <p style="text-align: center; margin-bottom: 15px;">
+                <strong>Par téléphone ou par email vous pouvez joindre votre Maître-Nageur car il a été informé que vous avez besoin de ses services.</strong>
+            </p>
+            <div class="contact-info">
+                <p>
+                    <strong>👤 Nom :</strong>
+                    <span>{{ nageur_prenom }} {{ nageur_nom }}</span>
+                </p>
+                <p>
+                    <strong>📞 Téléphone :</strong>
+                    <a href="tel:{{ nageur_tel }}">{{ nageur_tel }}</a>
+                </p>
+                <p>
+                    <strong>📧 Email :</strong>
+                    <a href="mailto:{{ nageur_email }}">{{ nageur_email }}</a>
+                </p>
+            </div>
         </div>
         
         <div class="price-card">

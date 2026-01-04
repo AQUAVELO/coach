@@ -180,7 +180,7 @@
             <p style="color: #5a7c7f; margin-top: 0.5rem;">
                 {{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 € = {{ "%.2f"|format(total) }} €
             </p>
-        </div>
+            </div>
 
         {% if code_validation %}
         <div class="validation-code">
@@ -194,7 +194,7 @@
                 <strong>📧 Un email de confirmation a été envoyé</strong><br>
                 <span style="font-size: 0.95rem;">Vérifiez votre boîte de réception pour les détails de contact</span>
             </p>
-        </div>
+                </div>
 
         <h3 style="color: #2c5d63; margin-bottom: 1.5rem; text-align: center;">
             👨‍🏫 Vos Maîtres-Nageurs
@@ -214,21 +214,21 @@
                     <strong>📱 Téléphone :</strong>
                     <a href="tel:{{ nageur.tel }}">{{ nageur.tel }}</a>
                 </div>
-                
+
                 {% if nageur.ville %}
                 <div class="contact-row">
                     <strong>📍 Ville :</strong>
                     <span>{{ nageur.ville }}</span>
                 </div>
                 {% endif %}
-                
+
                 {% if nageur.diplome %}
                 <div class="contact-row">
                     <strong>🎓 Diplôme :</strong>
                     <span>{{ nageur.diplome }}</span>
                 </div>
                 {% endif %}
-                
+
                 {% if nageur.tarif %}
                 <div class="contact-row">
                     <strong>💰 Tarif :</strong>

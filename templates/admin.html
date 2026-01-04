@@ -168,7 +168,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
+                </div>
         </div>
 
         <!-- Nageurs Section -->
@@ -222,7 +222,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
+                </div>
         </div>
 
         <!-- Réservations Section -->
@@ -248,14 +248,14 @@
                             <td><strong>{{ selection.nageur_prenom }} {{ selection.nageur_nom }}</strong></td>
                             <td>{{ selection.date_selection[:16] if selection.date_selection else 'N/A' }}</td>
                         </tr>
-                        {% else %}
+                                {% else %}
                         <tr>
                             <td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucune réservation</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
+                </div>
         </div>
     </div>
 

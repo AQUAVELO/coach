@@ -1,101 +1,243 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement Réussi - AquaCoach</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Paiement réussi !</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 50px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .success-icon {
+            text-align: center;
+            font-size: 6em;
+            margin-bottom: 20px;
+            animation: bounce 1s ease;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-30px);
+            }
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        h2 {
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .message {
+            text-align: center;
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .nageur-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #42a5f5;
+        }
+
+        .nageur-info h3 {
+            color: #1e6091;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 150px;
+        }
+
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+
+        .contact-btn {
+            background: linear-gradient(135deg, #42a5f5 0%, #2979ff 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(66, 165, 245, 0.4);
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .home-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #1e6091;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        .home-link:hover {
+            text-decoration: underline;
+        }
+
+        .instruction {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #155724;
+        }
+
+        .instruction strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
-            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
-            <div class="navbar-nav" style="display: flex; gap: 2rem;">
-                <a href="{{ url_for('index') }}" class="nav-link">Retour à l'accueil</a>
-            </div>
-        </div>
-    </nav>
+    <div class="container">
+        <div class="success-icon">✅</div>
+        <h2>Paiement réussi !</h2>
+        
+        <p class="message">
+            Merci <strong>{{ client_prenom }} {{ client_nom }}</strong> !
+        </p>
 
-    <!-- Success Section -->
-    <section class="section">
-        <div class="container" style="max-width: 700px; margin: 0 auto; padding: 0 20px;">
-            <div style="background: white; padding: 4rem 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); text-align: center;">
-                <!-- Success Icon -->
-                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 10px 30px rgba(0,188,212,0.3);">
-                    <span style="font-size: 3.5rem; color: white;">✓</span>
+        {% if nageur %}
+            <div class="instruction">
+                <strong>📞 Contactez votre coach</strong>
+                <p>Vous pouvez maintenant appeler ou envoyer un SMS à votre coach pour fixer un rendez-vous.</p>
+            </div>
+
+            <div class="nageur-info">
+                <h3>👨‍🏫 Coordonnées de votre Maître-Nageur</h3>
+                
+                <div class="info-row">
+                    <div class="info-label">👤 Nom :</div>
+                    <div class="info-value"><strong>{{ nageur.prenom }} {{ nageur.nom }}</strong></div>
                 </div>
 
-                <h1 style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;">
-                    Paiement réussi !
-                </h1>
-                
-                <p style="font-size: 1.3rem; color: #333; margin-bottom: 2rem;">
-                    Merci <strong>{{ client_prenom }} {{ client_nom }}</strong> !
-                </p>
-
-                {% if code_validation %}
-                <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); padding: 1.5rem; border-radius: 12px; margin: 2rem 0; border: 2px dashed #ffc107;">
-                    <p style="margin: 0 0 0.5rem 0; color: #856404; font-weight: 600;">
-                        📧 Email de confirmation envoyé !
-                    </p>
-                    <p style="margin: 0; color: #856404; font-size: 0.95rem;">
-                        Vérifiez votre boîte de réception
-                    </p>
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ffc107;">
-                        <p style="margin: 0 0 0.5rem 0; color: #856404; font-size: 0.9rem;">
-                            <strong>Code de validation :</strong>
-                        </p>
-                        <p style="margin: 0; font-size: 1.8rem; font-weight: 700; letter-spacing: 3px; color: #cc3366;">
-                            {{ code_validation }}
-                        </p>
+                {% if nageur.email %}
+                <div class="info-row">
+                    <div class="info-label">📧 Email :</div>
+                    <div class="info-value">
+                        <a href="mailto:{{ nageur.email }}" style="color: #42a5f5; text-decoration: none;">
+                            {{ nageur.email }}
+                        </a>
                     </div>
                 </div>
                 {% endif %}
 
-                <div style="background: linear-gradient(135deg, rgba(0,188,212,0.1) 0%, rgba(0,151,167,0.1) 100%); padding: 2rem; border-radius: 12px; margin: 2rem 0;">
-                    <h2 style="color: var(--text-dark); font-size: 1.5rem; margin-bottom: 1.5rem;">
-                        Coordonnées de votre maître-nageur
-                    </h2>
-                    
-                    <div style="text-align: left; max-width: 400px; margin: 0 auto;">
-                        <p style="font-size: 1.2rem; margin-bottom: 1rem;">
-                            <strong style="color: var(--primary-color);">{{ nageur_prenom }} {{ nageur_nom }}</strong>
-                        </p>
-                        <p style="margin-bottom: 0.75rem; color: #666;">
-                            📧 <a href="mailto:{{ nageur_email }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">{{ nageur_email }}</a>
-                        </p>
-                        <p style="margin-bottom: 0.75rem; color: #666;">
-                            📱 <a href="tel:{{ nageur_tel }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">{{ nageur_tel }}</a>
-                        </p>
+                {% if nageur.tel %}
+                <div class="info-row">
+                    <div class="info-label">📱 Téléphone :</div>
+                    <div class="info-value">
+                        <a href="tel:{{ nageur.tel }}" style="color: #42a5f5; text-decoration: none;">
+                            {{ nageur.tel }}
+                        </a>
                     </div>
-                </div>
 
-                <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <a href="tel:{{ nageur_tel }}" class="btn-primary-custom" style="text-decoration: none;">
-                        📞 Appeler maintenant
-                    </a>
-                    <a href="mailto:{{ nageur_email }}" class="btn-outline-custom" style="text-decoration: none; color: var(--primary-color); border-color: var(--primary-color);">
-                        ✉️ Envoyer un email
-                    </a>
                 </div>
+                {% endif %}
 
-                <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #E0E0E0;">
-                    <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                        ← Retour à l'accueil
-                    </a>
+                {% if nageur.ville %}
+                <div class="info-row">
+                    <div class="info-label">📍 Ville :</div>
+                    <div class="info-value">{{ nageur.ville }}</div>
                 </div>
+                {% endif %}
+
+                {% if nageur.diplome %}
+                <div class="info-row">
+                    <div class="info-label">🎓 Diplôme :</div>
+                    <div class="info-value">{{ nageur.diplome }}</div>
+                </div>
+                {% endif %}
+
+                {% if nageur.prix %}
+                <div class="info-row">
+                    <div class="info-label">💰 Tarif :</div>
+                    <div class="info-value">{{ "%.2f"|format(nageur.prix) }} € / séance</div>
+                </div>
+                {% endif %}
             </div>
-        </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-            <p class="footer-text">
-                &copy; 2025 AquaCoach - Tous droits réservés
-            </p>
-        </div>
-    </footer>
+            <div class="actions">
+                {% if nageur.tel %}
+                <a href="tel:{{ nageur.tel }}" class="contact-btn">
+                    📞 Appeler maintenant
+                </a>
+                {% endif %}
+
+                {% if nageur.email %}
+                <a href="mailto:{{ nageur.email }}?subject=Demande de cours de natation" class="contact-btn">
+                    ✉️ Envoyer un email
+                </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <p style="color: #dc3545; text-align: center;">❌ Nageur non trouvé.</p>
+        {% endif %}
+
+        <a href="{{ url_for('index') }}" class="home-link">🏠 Retour à l'accueil</a>
+    </div>
 </body>
 </html>

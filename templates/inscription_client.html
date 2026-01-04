@@ -57,50 +57,12 @@
                     {% endfor %}
                 </select>
 
-                <div style="border-top: 2px solid #e0e0e0; margin: 2rem 0; padding-top: 2rem;">
-                    <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.3rem;">
-                        🔐 Identifiants de connexion
-                    </h3>
-                    <p style="color: #666; font-size: 0.95rem; margin-bottom: 1.5rem;">
-                        Créez vos identifiants pour vous reconnecter et réserver d'autres prestations sans vous réinscrire.
-                    </p>
-
-                    <label class="form-label-custom" for="login">Nom d'utilisateur (login) :</label>
-                    <input type="text" id="login" name="login" class="form-control-custom" required 
-                           placeholder="Ex: jean.dupont" 
-                           pattern="[a-zA-Z0-9._-]+" 
-                           title="Lettres, chiffres, point, tiret et underscore uniquement">
-                    <small style="display: block; color: #888; margin-top: 0.25rem; margin-bottom: 1rem;">
-                        Uniquement lettres, chiffres, point (.), tiret (-) et underscore (_)
-                    </small>
-
-                    <label class="form-label-custom" for="password">Mot de passe :</label>
-                    <input type="password" id="password" name="password" class="form-control-custom" required 
-                           minlength="6"
-                           placeholder="Minimum 6 caractères">
-                    <small style="display: block; color: #888; margin-top: 0.25rem; margin-bottom: 1rem;">
-                        Minimum 6 caractères
-                    </small>
-
-                    <label class="form-label-custom" for="password_confirm">Confirmer le mot de passe :</label>
-                    <input type="password" id="password_confirm" name="password_confirm" class="form-control-custom" required 
-                           minlength="6"
-                           placeholder="Retapez votre mot de passe">
-                </div>
-
                 <button type="submit" class="btn-primary-custom" style="width: 100%; margin-top: 1rem;">
                     S'inscrire
                 </button>
             </form>
 
             <div style="text-align: center; margin-top: 2rem;">
-                <p style="color: #666; margin-bottom: 0.5rem;">Vous avez déjà un compte ?</p>
-                <a href="{{ url_for('client_login') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                    🔑 Se connecter
-                </a>
-            </div>
-
-            <div style="text-align: center; margin-top: 1.5rem;">
                 <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
                     ← Retour à l'accueil
                 </a>
@@ -116,31 +78,5 @@
             </p>
         </div>
     </footer>
-
-    <script>
-        // Vérification en temps réel de la correspondance des mots de passe
-        document.getElementById('password_confirm').addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            const passwordConfirm = this.value;
-            
-            if (passwordConfirm && password !== passwordConfirm) {
-                this.style.borderColor = '#f44336';
-            } else {
-                this.style.borderColor = '#4caf50';
-            }
-        });
-
-        // Vérification avant soumission
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const password = document.getElementById('password').value;
-            const passwordConfirm = document.getElementById('password_confirm').value;
-            
-            if (password !== passwordConfirm) {
-                e.preventDefault();
-                alert('❌ Les mots de passe ne correspondent pas !');
-                document.getElementById('password_confirm').focus();
-            }
-        });
-    </script>
 </body>
 </html>

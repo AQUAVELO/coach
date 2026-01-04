@@ -595,39 +595,14 @@ def submit_inscription_client():
     tel = request.form.get("tel")
     ville = request.form.get("ville")
     dept = request.form.get("dept")
-    login = request.form.get("login")
-    password = request.form.get("password")
-    password_confirm = request.form.get("password_confirm")
 
-    # Vérification des mots de passe
-    if password != password_confirm:
-        flash("Les mots de passe ne correspondent pas", "danger")
-        return redirect(url_for("inscription_client"))
-
-    # Vérifier si le login existe déjà
     db = get_db()
-    existing_login = db.execute("SELECT id FROM client WHERE login = ?", (login,)).fetchone()
-    if existing_login:
-        flash("Ce nom d'utilisateur est déjà pris", "danger")
-        db.close()
-        return redirect(url_for("inscription_client"))
-
-    # Vérifier si l'email existe déjà
-    existing_email = db.execute("SELECT id FROM client WHERE email = ?", (email,)).fetchone()
-    if existing_email:
-        flash("Cet email est déjà utilisé", "danger")
-        db.close()
-        return redirect(url_for("inscription_client"))
-
-    # Hasher le mot de passe
-    password_hash = generate_password_hash(password)
-
     cursor = db.execute(
         """
-        INSERT INTO client (nom, prenom, email, tel, ville, dept, login, password_hash)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO client (nom, prenom, email, tel, ville, dept)
+        VALUES (?, ?, ?, ?, ?, ?)
     """,
-        (nom, prenom, email, tel, ville, dept, login, password_hash),
+        (nom, prenom, email, tel, ville, dept),
     )
     client_id = cursor.lastrowid
     db.commit()
@@ -635,10 +610,7 @@ def submit_inscription_client():
 
     session["client_id"] = client_id
     session["client_dept"] = dept
-    session["client_logged_in"] = True
-    session["client_login"] = login
 
-    flash(f"Bienvenue {prenom} ! Votre compte a été créé avec succès.", "success")
     return redirect(url_for("choix_nageur"))
 
 

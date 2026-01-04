@@ -21,7 +21,9 @@
 
 ### 🔐 Panel Administrateur
 - 📊 Dashboard avec statistiques complètes
-- 👥 Gestion des clients et maîtres-nageurs
+- 👥 Gestion complète des clients et maîtres-nageurs (CRUD)
+- ✏️ Modification des fiches (nom, prénom, email, téléphone, etc.)
+- 🗑️ Suppression avec confirmation
 - 🤝 Suivi des réservations
 - 📧 Notifications email automatiques
 
@@ -216,6 +218,66 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 - Signaler des bugs
 - Proposer des améliorations
 - Soumettre des pull requests
+
+## 🚀 Déploiement en Production (o2switch)
+
+### Configuration rapide
+
+1. **Cloner le repository sur o2switch** :
+```bash
+cd ~/www
+git clone https://github.com/AQUAVELO/coach.git natation
+cd natation
+```
+
+2. **Installer les dépendances** :
+```bash
+pip3 install --user -r requirements.txt
+```
+
+3. **Configurer le .htaccess** :
+   - Modifier `VOTRE_USER` avec votre nom d'utilisateur o2switch
+   - Modifier `SECRET_KEY` avec une clé aléatoire sécurisée
+
+4. **Initialiser la base de données** :
+```bash
+python3 -c "from app import init_db; init_db()"
+```
+
+5. **Configurer les permissions** :
+```bash
+chmod 755 instance/
+chmod 664 instance/aquacoach.db
+```
+
+6. **Démarrer l'application** :
+```bash
+touch tmp/restart.txt
+```
+
+### 🔧 Déploiement automatique
+
+Utilisez le script de déploiement pour les mises à jour :
+
+```bash
+./deploy.sh
+```
+
+### 📚 Documentation détaillée
+
+- **[FIX_ADMIN_O2SWITCH.md](FIX_ADMIN_O2SWITCH.md)** - 🚨 Solution rapide si les modifications admin ne fonctionnent pas
+- **[PRODUCTION_O2SWITCH.md](PRODUCTION_O2SWITCH.md)** - 📖 Guide complet de configuration pour o2switch
+- **[GITHUB_SYNC.md](GITHUB_SYNC.md)** - 🔄 Synchronisation Git et GitHub
+
+### ⚠️ Problèmes courants en production
+
+**Les modifications admin ne fonctionnent pas ?**
+→ Consultez [FIX_ADMIN_O2SWITCH.md](FIX_ADMIN_O2SWITCH.md) pour une solution rapide (5 min)
+
+**Cause principale :** Permissions insuffisantes sur la base de données SQLite  
+**Solution :** `chmod 755 instance/ && chmod 664 instance/aquacoach.db`
+
+---
 
 ## 📄 Licence
 

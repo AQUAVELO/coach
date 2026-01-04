@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Client - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('admin_index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav">
+                <a href="{{ url_for('admin_index') }}" class="nav-link" style="color: var(--primary-color); text-decoration: none;">← Retour à l'admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="form-section" style="padding: 3rem 0;">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
+            <div class="form-card" style="background: white; border-radius: 15px; padding: 3rem; box-shadow: 0 5px 20px rgba(0,0,0,0.08);">
+                <h1 style="color: var(--text-dark); font-size: 2.5rem; margin-bottom: 1rem;">✏️ Modifier un Client</h1>
+                <p style="color: var(--text-medium); margin-bottom: 2rem;">Modifiez les informations du client</p>
+
+                <form method="POST" action="{{ url_for('edit_client', id=client.id) }}">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Nom :</label>
+                        <input type="text" name="nom" value="{{ client.nom }}" required
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Prénom :</label>
+                        <input type="text" name="prenom" value="{{ client.prenom }}" required
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Email :</label>
+                        <input type="email" name="email" value="{{ client.email }}" required
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Téléphone :</label>
+                        <input type="tel" name="tel" value="{{ client.tel }}" required
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Ville :</label>
+                        <input type="text" name="ville" value="{{ client.ville }}" required
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Département :</label>
+                        <select name="dept" required
+                                style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                            {% for dept in departements %}
+                            <option value="{{ dept }}" {% if dept == client.dept %}selected{% endif %}>{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" 
+                                style="flex: 1; background: var(--primary-color); color: white; padding: 1rem; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">
+                            💾 Enregistrer les modifications
+                        </button>
+                        <a href="{{ url_for('admin_index') }}" 
+                           style="flex: 1; background: #999; color: white; padding: 1rem; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; text-align: center; text-decoration: none; display: inline-block;">
+                            ❌ Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
+

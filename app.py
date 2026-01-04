@@ -332,6 +332,30 @@ def init_db():
         )
     """)
 
+    # Migration: Ajouter les colonnes manquantes à la table nageur si elles n'existent pas
+    try:
+        cursor = db.execute("PRAGMA table_info(nageur)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'disponibilites' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN disponibilites TEXT")
+            print("✅ Colonne 'disponibilites' ajoutée à la table nageur")
+        
+        if 'presentation' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN presentation TEXT")
+            print("✅ Colonne 'presentation' ajoutée à la table nageur")
+        
+        if 'diplome' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN diplome TEXT")
+            print("✅ Colonne 'diplome' ajoutée à la table nageur")
+        
+        if 'photo' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN photo TEXT")
+            print("✅ Colonne 'photo' ajoutée à la table nageur")
+            
+    except Exception as e:
+        print(f"⚠️ Erreur lors de la migration: {e}")
+
     db.commit()
     db.close()
 

@@ -484,6 +484,7 @@ def init_db():
             disponibilites TEXT,
             tarif REAL,
             photo TEXT,
+            preferences TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -532,6 +533,10 @@ def init_db():
         if 'photo' not in columns:
             db.execute("ALTER TABLE nageur ADD COLUMN photo TEXT")
             print("✅ Colonne 'photo' ajoutée à la table nageur")
+        
+        if 'preferences' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN preferences TEXT")
+            print("✅ Colonne 'preferences' ajoutée à la table nageur")
             
     except Exception as e:
         print(f"⚠️ Erreur lors de la migration: {e}")
@@ -719,6 +724,7 @@ def submit_inscription_nageur():
     presentation = request.form.get("presentation")
     disponibilites = request.form.get("disponibilites")
     tarif = request.form.get("tarif")
+    preferences = request.form.get("preferences")
 
     photo = None
     if "photo" in request.files:
@@ -732,8 +738,8 @@ def submit_inscription_nageur():
     db = get_db()
     db.execute(
         """
-        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, photo)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, photo, preferences)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             nom,
@@ -747,6 +753,7 @@ def submit_inscription_nageur():
             disponibilites,
             tarif,
             photo,
+            preferences,
         ),
     )
     db.commit()
@@ -906,6 +913,7 @@ def edit_nageur(id):
         presentation = request.form.get('presentation')
         disponibilites = request.form.get('disponibilites')
         tarif = request.form.get('tarif')
+        preferences = request.form.get('preferences')
         
         # Récupérer la photo actuelle
         nageur = db.execute('SELECT photo FROM nageur WHERE id = ?', (id,)).fetchone()
@@ -943,9 +951,9 @@ def edit_nageur(id):
         db.execute('''
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?,
-                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?
+                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?, preferences = ?
             WHERE id = ?
-        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, new_photo, id))
+        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, new_photo, preferences, id))
         db.commit()
         db.close()
         

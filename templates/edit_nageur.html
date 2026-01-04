@@ -130,6 +130,13 @@
                                placeholder="Ex: Lundi-Vendredi 9h-18h">
                     </div>
 
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Préférences :</label>
+                        <input type="text" name="preferences" value="{{ nageur.preferences }}"
+                               style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                               placeholder="Ex: Cours particuliers, Piscine privée">
+                    </div>
+
                     <div style="margin-bottom: 2rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Tarif (€/séance) :</label>
                         <input type="number" name="tarif" value="{{ nageur.tarif }}" step="0.01"

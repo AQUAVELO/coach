@@ -80,9 +80,9 @@
                                         <strong style="color: var(--primary-color);">📍 Ville :</strong> {{ nageur.ville }}
                                     </p>
 
-                                    {% if nageur.tel %}
+                                    {% if nageur.dept %}
                                     <p style="margin-bottom: 0.75rem; color: #666;">
-                                        <strong style="color: var(--primary-color);">📞 Téléphone :</strong> {{ nageur.tel }}
+                                        <strong style="color: var(--primary-color);">🗺️ Département :</strong> {{ nageur.dept }}
                                     </p>
                                     {% endif %}
 
@@ -93,28 +93,32 @@
                                     </p>
                                     {% endif %}
 
+                                    {% if nageur.tarif %}
+                                    <p style="margin-bottom: 0.75rem; color: #666;">
+                                        <strong style="color: var(--primary-color);">💰 Prix (€/heure) :</strong> 
+                                        <span style="font-size: 1.1rem; font-weight: 600; color: var(--primary-color);">{{ "%.2f"|format(nageur.tarif) }} €</span>
+                                    </p>
+                                    {% endif %}
+
                                     {% if nageur.presentation %}
                                     <p style="margin-bottom: 0.75rem; color: #666; font-size: 0.95rem; line-height: 1.6;">
                                         <strong style="color: var(--primary-color);">ℹ️ Présentation :</strong><br>
-                                        <span style="font-style: italic;">{{ nageur.presentation[:120] }}{% if nageur.presentation|length > 120 %}...{% endif %}</span>
+                                        <span style="font-style: italic;">{{ nageur.presentation[:150] }}{% if nageur.presentation|length > 150 %}...{% endif %}</span>
                                     </p>
                                     {% endif %}
 
-                                    {% if nageur.dispo %}
+                                    {% if nageur.disponibilites %}
                                     <p style="margin-bottom: 0.75rem; color: #666; font-size: 0.95rem;">
-                                        <strong style="color: var(--primary-color);">📅 Disponibilités :</strong> {{ nageur.dispo }}
+                                        <strong style="color: var(--primary-color);">📅 Disponibilités :</strong> {{ nageur.disponibilites }}
+                                    </p>
+                                    {% endif %}
+
+                                    {% if nageur.preferences %}
+                                    <p style="margin-bottom: 0.75rem; color: #666; font-size: 0.95rem;">
+                                        <strong style="color: var(--primary-color);">⭐ Préférences :</strong> {{ nageur.preferences }}
                                     </p>
                                     {% endif %}
                                 </div>
-
-                                <!-- Price -->
-                                {% if nageur.prix %}
-                                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #E0E0E0; text-align: center;">
-                                    <p style="font-size: 1.6rem; font-weight: 700; color: var(--primary-color);">
-                                        💰 {{ "%.2f"|format(nageur.prix) }} € <span style="font-size: 0.9rem; font-weight: 400; color: #999;">/ séance</span>
-                                    </p>
-                                </div>
-                                {% endif %}
                             </div>
                         </label>
                         {% endfor %}

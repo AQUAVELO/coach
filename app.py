@@ -258,6 +258,186 @@ def send_confirmation_email(
         return None
 
 
+def send_nageur_inscription_email(
+    nageur_prenom,
+    nageur_nom,
+    nageur_email,
+    nageur_tel,
+    nageur_ville,
+    nageur_dept,
+    nageur_diplome,
+    nageur_tarif
+):
+    """Envoie un email de confirmation d'inscription au nageur et à l'admin"""
+    print(f"\n🔔 ENVOI D'EMAIL INSCRIPTION NAGEUR")
+    print(f"   Nageur: {nageur_prenom} {nageur_nom} <{nageur_email}>")
+
+    try:
+        # Connexion SMTP
+        print(f"📤 Connexion à Mailjet...")
+        server = smtplib.SMTP(MAILJET_HOST, MAILJET_PORT, timeout=30)
+        server.starttls()
+        server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+
+        # EMAIL 1 : Au nageur
+        msg_nageur = MIMEMultipart("alternative")
+        msg_nageur["Subject"] = "Bienvenue sur AquaCoach - Inscription confirmée !"
+        msg_nageur["From"] = f"{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>"
+        msg_nageur["To"] = nageur_email
+
+        html_nageur = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #3fb0ac; border-bottom: 3px solid #3fb0ac; padding-bottom: 10px;">
+                    🌊 Bienvenue sur AquaCoach !
+                </h2>
+                
+                <p>Bonjour <strong>{nageur_prenom} {nageur_nom}</strong>,</p>
+                
+                <p style="font-size: 1.1em; background: #f0f9ff; padding: 15px; border-left: 4px solid #3fb0ac;">
+                    🎉 <strong>Félicitations !</strong> Votre inscription en tant que maître-nageur sur AquaCoach a été confirmée.
+                </p>
+                
+                <h3 style="color: #3fb0ac; margin-top: 30px;">📋 Récapitulatif de votre profil :</h3>
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0;"><strong>👤 Nom :</strong> {nageur_prenom} {nageur_nom}</li>
+                        <li style="padding: 8px 0;"><strong>📧 Email :</strong> {nageur_email}</li>
+                        <li style="padding: 8px 0;"><strong>📞 Téléphone :</strong> {nageur_tel}</li>
+                        <li style="padding: 8px 0;"><strong>📍 Ville :</strong> {nageur_ville} ({nageur_dept})</li>
+                        <li style="padding: 8px 0;"><strong>🎓 Diplôme :</strong> {nageur_diplome or 'Non renseigné'}</li>
+                        <li style="padding: 8px 0;"><strong>💰 Tarif :</strong> {nageur_tarif}€/séance</li>
+                    </ul>
+                </div>
+                
+                <h3 style="color: #3fb0ac; margin-top: 30px;">🚀 Que se passe-t-il maintenant ?</h3>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                    <p style="margin: 10px 0;">
+                        ✅ <strong>Votre profil est maintenant visible</strong> par tous les clients cherchant un maître-nageur dans le département <strong>{nageur_dept}</strong>.
+                    </p>
+                    <p style="margin: 10px 0;">
+                        📱 <strong>Vous serez contacté directement</strong> par les clients intéressés par vos services via l'email <strong>{nageur_email}</strong> et le téléphone <strong>{nageur_tel}</strong>.
+                    </p>
+                    <p style="margin: 10px 0;">
+                        💼 <strong>Aucune commission</strong> n'est prélevée sur vos cours - vous gérez directement la relation avec vos clients.
+                    </p>
+                </div>
+                
+                <h3 style="color: #3fb0ac; margin-top: 30px;">💡 Conseils pour réussir :</h3>
+                <ul style="line-height: 1.8;">
+                    <li>📸 <strong>Ajoutez une photo professionnelle</strong> pour inspirer confiance</li>
+                    <li>📝 <strong>Complétez votre présentation</strong> pour vous démarquer</li>
+                    <li>📅 <strong>Indiquez vos disponibilités</strong> clairement</li>
+                    <li>⚡ <strong>Répondez rapidement</strong> aux demandes pour maximiser vos chances</li>
+                </ul>
+                
+                <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center;">
+                    <p style="font-size: 1.2em; margin: 0;">
+                        <strong>🎯 Prêt à partager votre passion de la natation ?</strong>
+                    </p>
+                    <p style="margin: 10px 0;">
+                        Les premiers clients vont bientôt vous contacter !
+                    </p>
+                </div>
+                
+                <p style="margin-top: 30px;">Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+                
+                <p style="margin-top: 20px;">
+                    À très bientôt dans l'eau ! 🏊‍♂️<br>
+                    <strong>L'équipe AquaCoach</strong>
+                </p>
+                
+                <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center; color: #999; font-size: 0.9em;">
+                    <p>AquaCoach - La plateforme qui connecte les passionnés de natation</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        text_nageur = f"""
+Bienvenue sur AquaCoach !
+
+Bonjour {nageur_prenom} {nageur_nom},
+
+Félicitations ! Votre inscription en tant que maître-nageur sur AquaCoach a été confirmée.
+
+RÉCAPITULATIF :
+- Nom : {nageur_prenom} {nageur_nom}
+- Email : {nageur_email}
+- Téléphone : {nageur_tel}
+- Ville : {nageur_ville} ({nageur_dept})
+- Diplôme : {nageur_diplome or 'Non renseigné'}
+- Tarif : {nageur_tarif}€/séance
+
+QUE SE PASSE-T-IL MAINTENANT ?
+
+✓ Votre profil est maintenant visible par tous les clients cherchant un maître-nageur dans le département {nageur_dept}.
+✓ Vous serez contacté directement par les clients intéressés.
+✓ Aucune commission n'est prélevée sur vos cours.
+
+CONSEILS :
+- Ajoutez une photo professionnelle
+- Complétez votre présentation
+- Répondez rapidement aux demandes
+
+À très bientôt dans l'eau !
+L'équipe AquaCoach
+        """
+
+        msg_nageur.attach(MIMEText(text_nageur, "plain", "utf-8"))
+        msg_nageur.attach(MIMEText(html_nageur, "html", "utf-8"))
+        server.send_message(msg_nageur)
+        print(f"✅ Email NAGEUR envoyé à {nageur_email}")
+
+        # EMAIL 2 : À l'admin
+        msg_admin = MIMEMultipart("alternative")
+        msg_admin["Subject"] = f"Nouvelle inscription nageur - {nageur_prenom} {nageur_nom}"
+        msg_admin["From"] = f"{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>"
+        msg_admin["To"] = ADMIN_EMAIL
+
+        html_admin = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <h2 style="color: #3fb0ac;">🏊‍♂️ Nouvelle Inscription Maître-Nageur</h2>
+            <p><strong>{nageur_prenom} {nageur_nom}</strong> vient de s'inscrire sur AquaCoach.</p>
+            
+            <h3 style="color: #3fb0ac;">Informations :</h3>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                <ul style="line-height: 1.8;">
+                    <li><strong>Nom :</strong> {nageur_prenom} {nageur_nom}</li>
+                    <li><strong>Email :</strong> <a href="mailto:{nageur_email}">{nageur_email}</a></li>
+                    <li><strong>Téléphone :</strong> {nageur_tel}</li>
+                    <li><strong>Ville :</strong> {nageur_ville}</li>
+                    <li><strong>Département :</strong> {nageur_dept}</li>
+                    <li><strong>Diplôme :</strong> {nageur_diplome or 'Non renseigné'}</li>
+                    <li><strong>Tarif :</strong> {nageur_tarif}€/séance</li>
+                </ul>
+            </div>
+            
+            <p style="margin-top: 20px;">
+                Vérifiez le profil dans l'interface admin si nécessaire.
+            </p>
+        </body>
+        </html>
+        """
+
+        msg_admin.attach(MIMEText(html_admin, "html", "utf-8"))
+        server.send_message(msg_admin)
+        print(f"✅ Email ADMIN envoyé à {ADMIN_EMAIL}")
+
+        server.quit()
+        print("✅ Tous les emails d'inscription nageur envoyés")
+        return True
+
+    except Exception as e:
+        print(f"❌ ERREUR EMAIL INSCRIPTION NAGEUR: {e}\n")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 # ============================================
 # AUTHENTICATION
 # ============================================
@@ -568,7 +748,23 @@ def submit_inscription_nageur():
     db.commit()
     db.close()
 
-    flash("Inscription réussie ! Vous serez contacté prochainement.", "success")
+    # Envoi des emails de confirmation
+    email_sent = send_nageur_inscription_email(
+        nageur_prenom=prenom,
+        nageur_nom=nom,
+        nageur_email=email,
+        nageur_tel=tel,
+        nageur_ville=ville,
+        nageur_dept=dept,
+        nageur_diplome=diplome,
+        nageur_tarif=tarif
+    )
+
+    if email_sent:
+        flash("✅ Inscription réussie ! Un email de confirmation vous a été envoyé. Vous serez bientôt contacté par des prospects.", "success")
+    else:
+        flash("⚠️ Inscription réussie ! Cependant, l'email de confirmation n'a pas pu être envoyé. Vous recevrez bientôt les contacts des prospects.", "warning")
+    
     return redirect(url_for("inscription_nageur"))
 
 

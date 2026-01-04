@@ -696,6 +696,8 @@ def paiement():
         client_nom=client["nom"],
         nageur_prenom=nageur["prenom"],
         nageur_nom=nageur["nom"],
+        nageur_email=nageur["email"],
+        nageur_tel=nageur["tel"],
         code_validation=code_validation,
     )
 

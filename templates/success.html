@@ -1,18 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement réussi !</title>
+    <title>Paiement réussi - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -21,223 +15,244 @@
             padding: 20px;
         }
 
-        .container {
+        .success-container {
             background: white;
-            border-radius: 15px;
-            padding: 50px;
-            max-width: 600px;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
             width: 100%;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .success-icon {
             text-align: center;
-            font-size: 6em;
-            margin-bottom: 20px;
+            font-size: 5rem;
+            margin-bottom: 1rem;
             animation: bounce 1s ease;
         }
 
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-30px);
-            }
-            60% {
-                transform: translateY(-15px);
-            }
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
         }
 
-        h2 {
+        .success-title {
             color: #28a745;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.2em;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
         }
 
-        .message {
+        .success-message {
             text-align: center;
-            color: #333;
-            font-size: 1.2em;
-            margin-bottom: 40px;
-            line-height: 1.6;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
         }
 
-        .nageur-info {
-            background: #f8f9fa;
+        .payment-summary {
+            background: linear-gradient(135deg, #e3f4f4 0%, #d0eaea 100%);
+            padding: 2rem;
             border-radius: 12px;
-            padding: 30px;
-            margin: 30px 0;
-            border-left: 5px solid #42a5f5;
+            margin-bottom: 2rem;
+            text-align: center;
         }
 
-        .nageur-info h3 {
-            color: #1e6091;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+        .payment-summary h3 {
+            color: #2c5d63;
+            margin-bottom: 1rem;
         }
 
-        .info-row {
+        .payment-total {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nageur-card {
+            background: #f8f9fa;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .nageur-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .contact-info {
             display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #e0e0e0;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        .info-row:last-child {
-            border-bottom: none;
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
         }
 
-        .info-label {
-            font-weight: 600;
-            color: #555;
-            min-width: 150px;
-        }
-
-        .info-value {
+        .contact-row strong {
             color: #333;
-            flex: 1;
+            min-width: 100px;
         }
 
-        .contact-btn {
-            background: linear-gradient(135deg, #42a5f5 0%, #2979ff 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.1em;
-            cursor: pointer;
+        .contact-row a {
+            color: var(--primary-color);
             text-decoration: none;
-            display: inline-block;
-            margin: 10px;
-            transition: all 0.3s;
+            font-weight: 600;
         }
 
-        .contact-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(66, 165, 245, 0.4);
-        }
-
-        .actions {
-            text-align: center;
-            margin-top: 30px;
-        }
-
-        .home-link {
-            display: block;
-            text-align: center;
-            margin-top: 30px;
-            color: #1e6091;
-            text-decoration: none;
-            font-size: 1.1em;
-        }
-
-        .home-link:hover {
+        .contact-row a:hover {
             text-decoration: underline;
         }
 
-        .instruction {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #155724;
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
         }
 
-        .instruction strong {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 1.1em;
+        .btn-contact {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-contact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 176, 172, 0.4);
+        }
+
+        .btn-home {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-home:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .validation-code {
+            background: #fff3cd;
+            border: 2px dashed #ffc107;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .validation-code strong {
+            color: #856404;
+            font-size: 1.3rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="success-container">
         <div class="success-icon">✅</div>
-        <h2>Paiement réussi !</h2>
+        <h1 class="success-title">Paiement réussi !</h1>
         
-        <p class="message">
-            Merci <strong>{{ client_prenom }} {{ client_nom }}</strong> !
+        <p class="success-message">
+            Merci <strong>{{ client_prenom }} {{ client_nom }}</strong> pour votre confiance !
         </p>
 
-        {% if nageur %}
-            <div class="instruction">
-                <strong>📞 Contactez votre coach</strong>
-                <p>Vous pouvez maintenant appeler ou envoyer un SMS à votre coach pour fixer un rendez-vous.</p>
-            </div>
+        <div class="payment-summary">
+            <h3>💳 Récapitulatif du paiement</h3>
+            <div class="payment-total">{{ "%.2f"|format(total) }} €</div>
+            <p style="color: #5a7c7f; margin-top: 0.5rem;">
+                {{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 € = {{ "%.2f"|format(total) }} €
+            </p>
+        </div>
 
-            <div class="nageur-info">
-                <h3>👨‍🏫 Coordonnées de votre Maître-Nageur</h3>
-                
-                <div class="info-row">
-                    <div class="info-label">👤 Nom :</div>
-                    <div class="info-value"><strong>{{ nageur.prenom }} {{ nageur.nom }}</strong></div>
-                </div>
-
-                {% if nageur.email %}
-                <div class="info-row">
-                    <div class="info-label">📧 Email :</div>
-                    <div class="info-value">
-                        <a href="mailto:{{ nageur.email }}" style="color: #42a5f5; text-decoration: none;">
-                            {{ nageur.email }}
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if nageur.tel %}
-                <div class="info-row">
-                    <div class="info-label">📱 Téléphone :</div>
-                    <div class="info-value">
-                        <a href="tel:{{ nageur.tel }}" style="color: #42a5f5; text-decoration: none;">
-                            {{ nageur.tel }}
-                        </a>
-                    </div>
-
-                </div>
-                {% endif %}
-
-                {% if nageur.ville %}
-                <div class="info-row">
-                    <div class="info-label">📍 Ville :</div>
-                    <div class="info-value">{{ nageur.ville }}</div>
-                </div>
-                {% endif %}
-
-                {% if nageur.diplome %}
-                <div class="info-row">
-                    <div class="info-label">🎓 Diplôme :</div>
-                    <div class="info-value">{{ nageur.diplome }}</div>
-                </div>
-                {% endif %}
-
-                {% if nageur.prix %}
-                <div class="info-row">
-                    <div class="info-label">💰 Tarif :</div>
-                    <div class="info-value">{{ "%.2f"|format(nageur.prix) }} € / séance</div>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="actions">
-                {% if nageur.tel %}
-                <a href="tel:{{ nageur.tel }}" class="contact-btn">
-                    📞 Appeler maintenant
-                </a>
-                {% endif %}
-
-                {% if nageur.email %}
-                <a href="mailto:{{ nageur.email }}?subject=Demande de cours de natation" class="contact-btn">
-                    ✉️ Envoyer un email
-                </a>
-                {% endif %}
-            </div>
-        {% else %}
-            <p style="color: #dc3545; text-align: center;">❌ Nageur non trouvé.</p>
+        {% if code_validation %}
+        <div class="validation-code">
+            <p style="margin-bottom: 0.5rem; color: #856404;">Code de validation :</p>
+            <strong>{{ code_validation }}</strong>
+        </div>
         {% endif %}
 
-        <a href="{{ url_for('index') }}" class="home-link">🏠 Retour à l'accueil</a>
+        <div style="background: #d4edda; border: 2px solid #c3e6cb; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <p style="color: #155724; text-align: center; font-size: 1.1rem; margin: 0;">
+                <strong>📧 Un email de confirmation a été envoyé</strong><br>
+                <span style="font-size: 0.95rem;">Vérifiez votre boîte de réception pour les détails de contact</span>
+            </p>
+        </div>
+
+        <h3 style="color: #2c5d63; margin-bottom: 1.5rem; text-align: center;">
+            👨‍🏫 Vos Maîtres-Nageurs
+        </h3>
+
+        {% for nageur in nageurs %}
+        <div class="nageur-card">
+            <h4>🏊 {{ nageur.prenom }} {{ nageur.nom }}</h4>
+            
+            <div class="contact-info">
+                <div class="contact-row">
+                    <strong>📧 Email :</strong>
+                    <a href="mailto:{{ nageur.email }}">{{ nageur.email }}</a>
+                </div>
+                
+                <div class="contact-row">
+                    <strong>📱 Téléphone :</strong>
+                    <a href="tel:{{ nageur.tel }}">{{ nageur.tel }}</a>
+                </div>
+                
+                {% if nageur.ville %}
+                <div class="contact-row">
+                    <strong>📍 Ville :</strong>
+                    <span>{{ nageur.ville }}</span>
+                </div>
+                {% endif %}
+                
+                {% if nageur.diplome %}
+                <div class="contact-row">
+                    <strong>🎓 Diplôme :</strong>
+                    <span>{{ nageur.diplome }}</span>
+                </div>
+                {% endif %}
+                
+                {% if nageur.tarif %}
+                <div class="contact-row">
+                    <strong>💰 Tarif :</strong>
+                    <span>{{ "%.2f"|format(nageur.tarif) }} € / heure</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="action-buttons" style="margin-top: 1.5rem;">
+                <a href="tel:{{ nageur.tel }}" class="btn-contact">
+                    📞 Appeler {{ nageur.prenom }}
+                </a>
+                <a href="mailto:{{ nageur.email }}" class="btn-contact" style="background: #6c757d;">
+                    ✉️ Envoyer un email
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="action-buttons">
+            <a href="{{ url_for('index') }}" class="btn-home">
+                🏠 Retour à l'accueil
+            </a>
+        </div>
     </div>
 </body>
 </html>

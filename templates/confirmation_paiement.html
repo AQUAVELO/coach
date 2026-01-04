@@ -144,14 +144,16 @@
         </div>
         
         <div class="reservation-info">
-            <strong>Mise en relation d'une prestation </strong><br>
-           
+            <strong>Mise en relation avec {{ count }} maître-nageur{{ 's' if count > 1 else '' }} :</strong><br>
+            {% for nageur in nageurs %}
+                <span style="color: var(--primary-color); font-weight: 600;">{{ nageur.prenom }} {{ nageur.nom }}</span>{% if not loop.last %}, {% endif %}
+            {% endfor %}
         </div>
         
         <div class="price-card">
             <div class="price-title">Frais de dossier</div>
-            <div class="price-amount">2,00 €</div>
-            <div class="price-subtitle">Paiement unique</div>
+            <div class="price-amount">{{ "%.2f"|format(total) }} €</div>
+            <div class="price-subtitle">{{ count }} nageur{{ 's' if count > 1 else '' }} × 2,00 € = {{ "%.2f"|format(total) }} €</div>
         </div>
         
         <form action="{{ url_for('paiement') }}" method="POST">
@@ -172,7 +174,7 @@
             </div>
             
             <button type="submit" class="pay-button">
-                💳 Payer 2,00 €
+                💳 Payer {{ "%.2f"|format(total) }} €
             </button>
             
             <div class="security-badge">

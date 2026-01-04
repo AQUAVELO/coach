@@ -657,8 +657,12 @@ def client_logout():
 @app.route("/choix_nageur", methods=["GET", "POST"])
 def choix_nageur():
     if request.method == "POST":
-        nageur_id = request.form.get("nageur_id")
-        session["nageur_id"] = nageur_id
+        nageur_ids = request.form.getlist("nageur_ids")  # Récupérer la liste des IDs
+        if not nageur_ids:
+            flash("Veuillez sélectionner au moins un maître-nageur", "danger")
+            return redirect(url_for("choix_nageur"))
+        
+        session["nageur_ids"] = nageur_ids  # Stocker la liste
         return redirect(url_for("confirmation_paiement"))
 
     if "client_dept" not in session:
@@ -670,35 +674,41 @@ def choix_nageur():
     ).fetchall()
     db.close()
 
-    return render_template("choix_nageur.html", nageurs=nageurs)
+    return render_template("choix_nageur.html", nageurs=nageurs, dept=session["client_dept"])
 
 
 @app.route("/confirmation_paiement")
 def confirmation_paiement():
     """Page de confirmation de paiement (MODE DÉMO)"""
-    if "nageur_id" not in session or "client_id" not in session:
+    if "nageur_ids" not in session or "client_id" not in session:
         flash("Session expirée", "danger")
         return redirect(url_for("index"))
 
     db = get_db()
-    nageur = db.execute(
-        "SELECT * FROM nageur WHERE id = ?", (session["nageur_id"],)
-    ).fetchone()
+    
+    # Récupérer tous les nageurs sélectionnés
+    nageur_ids = session["nageur_ids"]
+    placeholders = ','.join('?' * len(nageur_ids))
+    nageurs = db.execute(
+        f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids
+    ).fetchall()
+    
     client = db.execute(
         "SELECT * FROM client WHERE id = ?", (session["client_id"],)
     ).fetchone()
     db.close()
 
-    if not nageur or not client:
+    if not nageurs or not client:
         flash("Erreur lors de la récupération des informations", "danger")
         return redirect(url_for("index"))
 
+    total = len(nageurs) * 2.00  # 2€ par nageur
+
     return render_template(
         "confirmation_paiement.html",
-        nageur_prenom=nageur["prenom"],
-        nageur_nom=nageur["nom"],
-        nageur_tel=nageur["tel"],
-        nageur_email=nageur["email"],
+        nageurs=nageurs,
+        total=total,
+        count=len(nageurs),
         client_email=client["email"],
     )
 
@@ -706,61 +716,72 @@ def confirmation_paiement():
 @app.route("/paiement", methods=["POST"])
 def paiement():
     """Traiter le paiement simulé (MODE DÉMO)"""
-    if "nageur_id" not in session or "client_id" not in session:
+    if "nageur_ids" not in session or "client_id" not in session:
         flash("Session expirée", "danger")
         return redirect(url_for("index"))
 
     db = get_db()
-    nageur = db.execute(
-        "SELECT * FROM nageur WHERE id = ?", (session["nageur_id"],)
-    ).fetchone()
+    
+    # Récupérer tous les nageurs sélectionnés
+    nageur_ids = session["nageur_ids"]
+    placeholders = ','.join('?' * len(nageur_ids))
+    nageurs = db.execute(
+        f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids
+    ).fetchall()
+    
     client = db.execute(
         "SELECT * FROM client WHERE id = ?", (session["client_id"],)
     ).fetchone()
 
-    # Enregistrer la sélection
-    db.execute(
-        """
-        INSERT INTO selection (client_id, nageur_id, date_selection)
-        VALUES (?, ?, ?)
-    """,
-        (session["client_id"], session["nageur_id"], datetime.now()),
-    )
+    # Enregistrer toutes les sélections
+    for nageur_id in nageur_ids:
+        db.execute(
+            """
+            INSERT INTO selection (client_id, nageur_id, date_selection)
+            VALUES (?, ?, ?)
+        """,
+            (session["client_id"], nageur_id, datetime.now()),
+        )
     db.commit()
+
+    # Envoyer un email pour chaque nageur
+    all_emails_sent = True
+    for nageur in nageurs:
+        code_validation = send_confirmation_email(
+            client_email=client["email"],
+            client_prenom=client["prenom"],
+            client_nom=client["nom"],
+            nageur_prenom=nageur["prenom"],
+            nageur_nom=nageur["nom"],
+            nageur_email=nageur["email"],
+            nageur_tel=nageur["tel"],
+            nageur_ville=nageur["ville"],
+            montant="2,00 €",
+        )
+        if not code_validation:
+            all_emails_sent = False
+
     db.close()
 
-    # Envoi des emails
-    code_validation = send_confirmation_email(
-        client_email=client["email"],
-        client_prenom=client["prenom"],
-        client_nom=client["nom"],
-        nageur_prenom=nageur["prenom"],
-        nageur_nom=nageur["nom"],
-        nageur_email=nageur["email"],
-        nageur_tel=nageur["tel"],
-        nageur_ville=nageur["ville"],
-        montant="2,00 €",
-    )
+    total = len(nageurs) * 2.00
+    code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
-    if code_validation:
-        flash("Un email de confirmation vous a été envoyé !", "success")
+    if all_emails_sent:
+        flash("Les emails de confirmation ont été envoyés !", "success")
     else:
-        flash(
-            "Réservation enregistrée mais erreur lors de l'envoi de l'email.", "warning"
-        )
+        flash("Réservation enregistrée mais erreur lors de l'envoi de certains emails.", "warning")
 
     # Nettoyer la session
-    session.pop("nageur_id", None)
+    session.pop("nageur_ids", None)
     session.pop("client_id", None)
 
     return render_template(
         "success.html",
         client_prenom=client["prenom"],
         client_nom=client["nom"],
-        nageur_prenom=nageur["prenom"],
-        nageur_nom=nageur["nom"],
-        nageur_email=nageur["email"],
-        nageur_tel=nageur["tel"],
+        nageurs=nageurs,
+        total=total,
+        count=len(nageurs),
         code_validation=code_validation,
     )
 

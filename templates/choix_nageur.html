@@ -43,15 +43,29 @@
             {% endwith %}
 
             {% if nageurs %}
-                <form method="POST">
+                <form method="POST" id="nageurForm">
+                    <div style="background: linear-gradient(135deg, #e3f4f4 0%, #d0eaea 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
+                        <p style="font-size: 1.1rem; color: #2c5d63; margin: 0;">
+                            💡 <strong>Sélectionnez un ou plusieurs maîtres-nageurs</strong> (2,00 € par nageur)
+                        </p>
+                        <p id="selectedCount" style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color); margin-top: 0.5rem;">
+                            0 sélectionné • Total : 0,00 €
+                        </p>
+                    </div>
+
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
                         {% for nageur in nageurs %}
                         <label style="cursor: pointer;">
-                            <input type="radio" name="nageur_id" value="{{ nageur.id }}" required style="display: none;" class="nageur-radio">
+                            <input type="checkbox" name="nageur_ids" value="{{ nageur.id }}" style="display: none;" class="nageur-checkbox">
                             
                             <div class="nageur-card" style="background: white; border: 3px solid #E0E0E0; border-radius: 15px; padding: 2rem; transition: all 0.3s ease; height: 100%; position: relative;">
-                                <!-- Radio indicator -->
-                                <div class="radio-indicator" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 30px; height: 30px; border: 3px solid #E0E0E0; border-radius: 50%; transition: all 0.3s ease;"></div>
+                                <!-- Checkbox indicator -->
+                                <div class="checkbox-indicator" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 30px; height: 30px; border: 3px solid #E0E0E0; border-radius: 8px; transition: all 0.3s ease;"></div>
+                                
+                                <!-- Prix badge -->
+                                <div class="prix-badge" style="position: absolute; top: 1.5rem; left: 1.5rem; background: linear-gradient(135deg, #3fb0ac 0%, #2c8d89 100%); color: white; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; opacity: 0; transition: all 0.3s ease;">
+                                    +2,00 €
+                                </div>
 
                                 <!-- Nageur Header -->
                                 <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
@@ -161,19 +175,19 @@
 
     <style>
         /* Style pour les cartes nageurs sélectionnées */
-        .nageur-radio:checked + .nageur-card {
+        .nageur-checkbox:checked + .nageur-card {
             border-color: var(--primary-color) !important;
             background: linear-gradient(135deg, rgba(0,188,212,0.05) 0%, rgba(0,151,167,0.05) 100%) !important;
             box-shadow: 0 10px 30px rgba(0,188,212,0.2) !important;
             transform: translateY(-5px);
         }
 
-        .nageur-radio:checked + .nageur-card .radio-indicator {
+        .nageur-checkbox:checked + .nageur-card .checkbox-indicator {
             border-color: var(--primary-color) !important;
             background: var(--primary-color) !important;
         }
 
-        .nageur-radio:checked + .nageur-card .radio-indicator::after {
+        .nageur-checkbox:checked + .nageur-card .checkbox-indicator::after {
             content: '✓';
             color: white;
             font-weight: bold;
@@ -184,10 +198,63 @@
             height: 100%;
         }
 
+        .nageur-checkbox:checked + .nageur-card .prix-badge {
+            opacity: 1 !important;
+        }
+
         .nageur-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('nageurForm');
+            const checkboxes = document.querySelectorAll('.nageur-checkbox');
+            const selectedCountDiv = document.getElementById('selectedCount');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            function updateSelectedCount() {
+                const checkedBoxes = document.querySelectorAll('.nageur-checkbox:checked');
+                const count = checkedBoxes.length;
+                const total = count * 2.00;
+
+                if (count === 0) {
+                    selectedCountDiv.innerHTML = '0 sélectionné • Total : 0,00 €';
+                    selectedCountDiv.style.color = '#666';
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.style.opacity = '0.5';
+                        submitButton.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    selectedCountDiv.innerHTML = `${count} sélectionné${count > 1 ? 's' : ''} • Total : <span style="font-size: 1.5rem;">${total.toFixed(2)} €</span>`;
+                    selectedCountDiv.style.color = 'var(--primary-color)';
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.style.opacity = '1';
+                        submitButton.style.cursor = 'pointer';
+                    }
+                }
+            }
+
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectedCount);
+            });
+
+            // Validation avant soumission
+            form.addEventListener('submit', function(e) {
+                const checkedBoxes = document.querySelectorAll('.nageur-checkbox:checked');
+                if (checkedBoxes.length === 0) {
+                    e.preventDefault();
+                    alert('⚠️ Veuillez sélectionner au moins un maître-nageur');
+                }
+            });
+
+            // Initialiser l'état
+            updateSelectedCount();
+        });
+    </script>
 </body>
 </html>

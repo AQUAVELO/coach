@@ -113,12 +113,12 @@
                 {% for nageur in nageurs %}
                 <div class="card-custom animate-fade-in">
                     {% if nageur.photo %}
-                        <img src="{{ url_for('static', filename='uploads/' + nageur.photo) }}" alt="{{ nageur.prenom }} {{ nageur.nom }}" class="card-img-top-custom" style="object-fit: cover;">
+                        <img src="{{ url_for('static', filename='uploads/' + nageur.photo) }}" alt="{{ nageur.prenom }}" class="card-img-top-custom" style="object-fit: cover;">
                     {% else %}
                         <img src="{{ url_for('static', filename='images/default-swimmer.svg') }}" alt="Photo par défaut" class="card-img-top-custom" style="object-fit: cover;">
                     {% endif %}
                     <div class="card-body-custom">
-                        <h3 class="card-title-custom">{{ nageur.prenom }} {{ nageur.nom }}</h3>
+                        <h3 class="card-title-custom">{{ nageur.prenom }}</h3>
                         <p class="card-text-custom">
                             <strong>📍</strong> {{ nageur.ville }} ({{ nageur.dept }})<br>
                             {% if nageur.diplome %}
@@ -147,7 +147,7 @@
                     <p class="testimonial-text">
                         "Excellente expérience avec AquaCoach. J'ai trouvé le maître-nageur parfait pour mes besoins !"
                     </p>
-                    <p class="testimonial-author">{{ client.prenom }} {{ client.nom[0] }}.</p>
+                    <p class="testimonial-author">{{ client.prenom }} .</p>
                     <p class="testimonial-location">{{ client.ville }}</p>
                 </div>
                 {% endfor %}

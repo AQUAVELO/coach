@@ -686,7 +686,6 @@ def choix_nageur():
 def confirmation_paiement():
     """Page de confirmation de paiement (MODE DÉMO)"""
     if "nageur_ids" not in session or "client_id" not in session:
-        flash("Session expirée", "danger")
         return redirect(url_for("index"))
 
     db = get_db()
@@ -722,7 +721,6 @@ def confirmation_paiement():
 def paiement():
     """Traiter le paiement simulé (MODE DÉMO)"""
     if "nageur_ids" not in session or "client_id" not in session:
-        flash("Session expirée", "danger")
         return redirect(url_for("index"))
 
     db = get_db()
@@ -770,11 +768,6 @@ def paiement():
 
     total = len(nageurs) * 2.00
     code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
-
-    if all_emails_sent:
-        flash("Les emails de confirmation ont été envoyés !", "success")
-    else:
-        flash("Réservation enregistrée mais erreur lors de l'envoi de certains emails.", "warning")
 
     # Nettoyer la session
     session.pop("nageur_ids", None)

@@ -749,7 +749,7 @@ def submit_inscription_nageur():
     db.close()
 
     # Envoi des emails de confirmation
-    email_sent = send_nageur_inscription_email(
+    send_nageur_inscription_email(
         nageur_prenom=prenom,
         nageur_nom=nom,
         nageur_email=email,
@@ -759,13 +759,18 @@ def submit_inscription_nageur():
         nageur_diplome=diplome,
         nageur_tarif=tarif
     )
-
-    if email_sent:
-        flash("✅ Inscription réussie ! Un email de confirmation vous a été envoyé. Vous serez bientôt contacté par des prospects.", "success")
-    else:
-        flash("⚠️ Inscription réussie ! Cependant, l'email de confirmation n'a pas pu être envoyé. Vous recevrez bientôt les contacts des prospects.", "warning")
     
-    return redirect(url_for("inscription_nageur"))
+    # Redirection vers la page de confirmation avec les infos du nageur
+    return render_template("confirmation_inscription_nageur.html", nageur={
+        'nom': nom,
+        'prenom': prenom,
+        'email': email,
+        'tel': tel,
+        'ville': ville,
+        'dept': dept,
+        'diplome': diplome,
+        'tarif': tarif
+    })
 
 
 # ============================================

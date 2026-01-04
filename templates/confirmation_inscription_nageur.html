@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Confirmée - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .success-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #3fb0ac 0%, #2c8d89 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .success-card {
+            background: white;
+            max-width: 800px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .success-header {
+            background: linear-gradient(135deg, #3fb0ac 0%, #2c8d89 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounceIn 0.8s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .success-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .success-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .success-content {
+            padding: 2.5rem;
+        }
+        
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3fb0ac;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        
+        .info-box h3 {
+            color: #3fb0ac;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .info-box ul li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .info-box ul li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #3fb0ac;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .profile-summary {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        .profile-summary h3 {
+            color: #3fb0ac;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-item {
+            display: flex;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-item strong {
+            min-width: 150px;
+            color: #666;
+        }
+        
+        .tips-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+        
+        .tips-box h3 {
+            color: #856404;
+            margin-bottom: 1rem;
+        }
+        
+        .tips-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tips-box ul li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .tips-box ul li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+        
+        .motivation-box {
+            background: #e8f5e9;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .motivation-box p {
+            font-size: 1.3rem;
+            color: #2e7d32;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2c8d89;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 176, 172, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .email-note {
+            text-align: center;
+            padding: 1.5rem;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .email-note p {
+            margin: 0.5rem 0;
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-page">
+        <div class="success-card">
+            <!-- Header avec icône de succès -->
+            <div class="success-header">
+                <div class="success-icon">🎉</div>
+                <h1>Bienvenue sur AquaCoach !</h1>
+                <p>Votre inscription en tant que maître-nageur a été confirmée</p>
+            </div>
+            
+            <!-- Contenu principal -->
+            <div class="success-content">
+                <!-- Message de félicitations -->
+                <p style="font-size: 1.2rem; text-align: center; margin-bottom: 2rem;">
+                    Bonjour <strong>{{ nageur.prenom }} {{ nageur.nom }}</strong>,<br>
+                    Félicitations pour votre inscription ! 🏊‍♂️
+                </p>
+                
+                <!-- Récapitulatif du profil -->
+                <div class="profile-summary">
+                    <h3>📋 Récapitulatif de votre profil</h3>
+                    <div class="profile-item">
+                        <strong>👤 Nom :</strong>
+                        <span>{{ nageur.prenom }} {{ nageur.nom }}</span>
+                    </div>
+                    <div class="profile-item">
+                        <strong>📧 Email :</strong>
+                        <span>{{ nageur.email }}</span>
+                    </div>
+                    <div class="profile-item">
+                        <strong>📞 Téléphone :</strong>
+                        <span>{{ nageur.tel }}</span>
+                    </div>
+                    <div class="profile-item">
+                        <strong>📍 Ville :</strong>
+                        <span>{{ nageur.ville }} ({{ nageur.dept }})</span>
+                    </div>
+                    <div class="profile-item">
+                        <strong>🎓 Diplôme :</strong>
+                        <span>{{ nageur.diplome or 'Non renseigné' }}</span>
+                    </div>
+                    <div class="profile-item">
+                        <strong>💰 Tarif :</strong>
+                        <span>{{ nageur.tarif }}€/séance</span>
+                    </div>
+                </div>
+                
+                <!-- Ce qui se passe maintenant -->
+                <div class="info-box">
+                    <h3>🚀 Que se passe-t-il maintenant ?</h3>
+                    <ul>
+                        <li>
+                            <strong>Votre profil est maintenant visible</strong> par tous les clients cherchant 
+                            un maître-nageur dans le département <strong>{{ nageur.dept }}</strong>
+                        </li>
+                        <li>
+                            <strong>Vous serez contacté directement</strong> par les clients intéressés par vos 
+                            services via l'email <strong>{{ nageur.email }}</strong> et le téléphone <strong>{{ nageur.tel }}</strong>
+                        </li>
+                        <li>
+                            <strong>Aucune commission</strong> n'est prélevée sur vos cours - vous gérez 
+                            directement la relation avec vos clients
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Conseils -->
+                <div class="tips-box">
+                    <h3>💡 Conseils pour réussir</h3>
+                    <ul>
+                        <li>
+                            <strong>Ajoutez une photo professionnelle</strong> pour inspirer confiance aux clients
+                        </li>
+                        <li>
+                            <strong>Complétez votre présentation</strong> pour vous démarquer des autres maîtres-nageurs
+                        </li>
+                        <li>
+                            <strong>Indiquez vos disponibilités</strong> clairement pour faciliter la prise de contact
+                        </li>
+                        <li>
+                            <strong>Répondez rapidement</strong> aux demandes pour maximiser vos chances de conversion
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Box motivation -->
+                <div class="motivation-box">
+                    <p>🎯 Prêt à partager votre passion de la natation ?</p>
+                    <p style="font-size: 1.1rem; font-weight: normal; margin-top: 1rem;">
+                        Les premiers clients vont bientôt vous contacter !
+                    </p>
+                </div>
+                
+                <!-- Note email -->
+                <div class="email-note">
+                    <p><strong>📧 Un email de confirmation vous a été envoyé</strong></p>
+                    <p>Consultez votre boîte mail <strong>{{ nageur.email }}</strong> pour retrouver toutes ces informations</p>
+                </div>
+                
+                <!-- Boutons d'action -->
+                <div class="action-buttons">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        🏠 Retour à l'accueil
+                    </a>
+                    <a href="{{ url_for('inscription_nageur') }}" class="btn btn-secondary">
+                        ➕ Inscrire un autre nageur
+                    </a>
+                </div>
+                
+                <!-- Message de support -->
+                <p style="text-align: center; margin-top: 2rem; color: #666;">
+                    Si vous avez des questions, n'hésitez pas à nous contacter.<br>
+                    <strong style="color: var(--primary-color);">L'équipe AquaCoach</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

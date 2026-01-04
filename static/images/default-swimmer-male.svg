@@ -1,0 +1,16 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" rx="100" fill="url(#paint0_linear_male)"/>
+  <!-- Tête -->
+  <circle cx="100" cy="70" r="30" fill="white"/>
+  <!-- Corps -->
+  <path d="M100 100C70.621 100 46.0938 124.527 46.0938 153.906C46.0938 155.611 47.4783 157 49.183 157H150.817C152.522 157 153.906 155.611 153.906 153.906C153.906 124.527 129.379 100 100 100Z" fill="white"/>
+  <!-- Cheveux courts homme -->
+  <path d="M100 40C115 40 128 48 130 65C128 50 115 45 100 45C85 45 72 50 70 65C72 48 85 40 100 40Z" fill="#3FB0AC"/>
+  <defs>
+    <linearGradient id="paint0_linear_male" x1="100" y1="0" x2="100" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3FB0AC"/>
+      <stop offset="1" stop-color="#2C8D89"/>
+    </linearGradient>
+  </defs>
+</svg>
+

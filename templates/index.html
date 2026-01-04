@@ -114,8 +114,10 @@
                 <div class="card-custom animate-fade-in">
                     {% if nageur.photo %}
                         <img src="{{ url_for('static', filename='uploads/' + nageur.photo) }}" alt="{{ nageur.prenom }}" class="card-img-top-custom" style="object-fit: cover;">
+                    {% elif nageur.sexe == 'F' %}
+                        <img src="{{ url_for('static', filename='images/default-swimmer-female.svg') }}" alt="Photo par défaut femme" class="card-img-top-custom" style="object-fit: cover;">
                     {% else %}
-                        <img src="{{ url_for('static', filename='images/default-swimmer.svg') }}" alt="Photo par défaut" class="card-img-top-custom" style="object-fit: cover;">
+                        <img src="{{ url_for('static', filename='images/default-swimmer-male.svg') }}" alt="Photo par défaut homme" class="card-img-top-custom" style="object-fit: cover;">
                     {% endif %}
                     <div class="card-body-custom">
                         <h3 class="card-title-custom">{{ nageur.prenom }}</h3>

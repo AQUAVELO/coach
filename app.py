@@ -485,6 +485,7 @@ def init_db():
             tarif REAL,
             photo TEXT,
             preferences TEXT,
+            sexe TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -539,6 +540,10 @@ def init_db():
         if 'preferences' not in columns:
             db.execute("ALTER TABLE nageur ADD COLUMN preferences TEXT")
             print("✅ Colonne 'preferences' ajoutée à la table nageur")
+        
+        if 'sexe' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN sexe TEXT")
+            print("✅ Colonne 'sexe' ajoutée à la table nageur")
             
     except Exception as e:
         print(f"⚠️ Erreur lors de la migration nageur: {e}")
@@ -799,6 +804,7 @@ def submit_inscription_nageur():
     tel = request.form.get("tel")
     ville = request.form.get("ville")
     dept = request.form.get("dept")
+    sexe = request.form.get("sexe")
     diplome = request.form.get("diplome")
     presentation = request.form.get("presentation")
     disponibilites = request.form.get("disponibilites")
@@ -817,8 +823,8 @@ def submit_inscription_nageur():
     db = get_db()
     db.execute(
         """
-        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, photo, preferences)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             nom,
@@ -827,6 +833,7 @@ def submit_inscription_nageur():
             tel,
             ville,
             dept,
+            sexe,
             diplome,
             presentation,
             disponibilites,
@@ -988,6 +995,7 @@ def edit_nageur(id):
         tel = request.form.get('tel')
         ville = request.form.get('ville')
         dept = request.form.get('dept')
+        sexe = request.form.get('sexe')
         diplome = request.form.get('diplome')
         presentation = request.form.get('presentation')
         disponibilites = request.form.get('disponibilites')
@@ -1029,10 +1037,10 @@ def edit_nageur(id):
         
         db.execute('''
             UPDATE nageur 
-            SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?,
+            SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?,
                 diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?, preferences = ?
             WHERE id = ?
-        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, new_photo, preferences, id))
+        ''', (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, new_photo, preferences, id))
         db.commit()
         db.close()
         

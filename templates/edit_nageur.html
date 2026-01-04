@@ -111,6 +111,15 @@
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Sexe :</label>
+                        <select name="sexe" required
+                                style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;">
+                            <option value="M" {% if nageur.sexe == 'M' %}selected{% endif %}>Homme</option>
+                            <option value="F" {% if nageur.sexe == 'F' %}selected{% endif %}>Femme</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Diplôme :</label>
                         <input type="text" name="diplome" value="{{ nageur.diplome }}"
                                style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"

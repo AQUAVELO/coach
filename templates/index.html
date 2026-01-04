@@ -63,17 +63,20 @@
                 {% for nageur in nageurs %}
                 <div class="card-custom animate-fade-in">
                     {% if nageur.photo %}
-                        <img src="{{ url_for('static', filename='images/' + nageur.photo) }}" alt="{{ nageur.prenom }} {{ nageur.nom }}" class="card-img-top-custom">
+                        <img src="{{ url_for('static', filename='uploads/' + nageur.photo) }}" alt="{{ nageur.prenom }} {{ nageur.nom }}" class="card-img-top-custom" style="object-fit: cover;">
                     {% else %}
-                        <div class="card-img-top-custom" style="background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem; font-weight: bold;">
-                            {{ nageur.prenom[0] }}{{ nageur.nom[0] }}
-                        </div>
+                        <img src="{{ url_for('static', filename='images/default-swimmer.svg') }}" alt="Photo par défaut" class="card-img-top-custom" style="object-fit: cover;">
                     {% endif %}
                     <div class="card-body-custom">
                         <h3 class="card-title-custom">{{ nageur.prenom }} {{ nageur.nom }}</h3>
                         <p class="card-text-custom">
-                            <strong>📍</strong> {{ nageur.ville }}<br>
-                            <span class="badge-custom">{{ nageur.id }}</span>
+                            <strong>📍</strong> {{ nageur.ville }} ({{ nageur.dept }})<br>
+                            {% if nageur.diplome %}
+                                <span class="badge-custom">{{ nageur.diplome }}</span>
+                            {% endif %}
+                            {% if nageur.tarif %}
+                                <br><strong>💰</strong> {{ nageur.tarif }}€/séance
+                            {% endif %}
                         </p>
                     </div>
                 </div>

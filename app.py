@@ -903,16 +903,49 @@ def edit_nageur(id):
         disponibilites = request.form.get('disponibilites')
         tarif = request.form.get('tarif')
         
+        # Récupérer la photo actuelle
+        nageur = db.execute('SELECT photo FROM nageur WHERE id = ?', (id,)).fetchone()
+        current_photo = nageur['photo'] if nageur else None
+        new_photo = current_photo
+        
+        # Gestion de la suppression de photo
+        if request.form.get('delete_photo') == '1':
+            if current_photo:
+                # Supprimer l'ancien fichier
+                old_path = os.path.join(UPLOAD_FOLDER, current_photo)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+                    print(f"🗑️ Photo supprimée : {current_photo}")
+            new_photo = None
+        
+        # Gestion de l'upload d'une nouvelle photo
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename:
+                # Supprimer l'ancienne photo si elle existe
+                if current_photo and not request.form.get('delete_photo'):
+                    old_path = os.path.join(UPLOAD_FOLDER, current_photo)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                        print(f"🗑️ Ancienne photo remplacée : {current_photo}")
+                
+                # Sauvegarder la nouvelle photo
+                filename = f"{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                new_photo = filename
+                print(f"📸 Nouvelle photo uploadée : {filename}")
+        
         db.execute('''
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?,
-                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?
+                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?
             WHERE id = ?
-        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, id))
+        ''', (nom, prenom, email, tel, ville, dept, diplome, presentation, disponibilites, tarif, new_photo, id))
         db.commit()
         db.close()
         
-        flash('Maître-nageur modifié avec succès !', 'success')
+        flash('✅ Maître-nageur modifié avec succès !', 'success')
         return redirect(url_for('admin_index'))
     
     # GET : afficher le formulaire

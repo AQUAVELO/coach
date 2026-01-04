@@ -99,6 +99,12 @@
                                     </p>
                                     {% endif %}
 
+                                    {% if nageur.sexe %}
+                                    <p style="margin-bottom: 0.75rem; color: #666;">
+                                        <strong style="color: var(--primary-color);">👤 Sexe :</strong> {{ 'Femme' if nageur.sexe == 'F' else 'Homme' }}
+                                    </p>
+                                    {% endif %}
+
                                     {% if nageur.diplome %}
                                     <p style="margin-bottom: 0.75rem; color: #666;">
                                         <strong style="color: var(--primary-color);">🎓 Diplôme :</strong> 

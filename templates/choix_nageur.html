@@ -69,20 +69,19 @@
 
                                 <!-- Nageur Header -->
                                 <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
-                                    {% if nageur.photo %}
-                                        <img src="{{ url_for('static', filename='uploads/' + nageur.photo) }}" 
-                                             alt="{{ nageur.prenom }} {{ nageur.nom }}" 
-                                             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); margin-right: 1.5rem;"
-                                             onerror="this.src='{{ url_for('static', filename='images/default-swimmer.svg') }}'">
+                                    {% if nageur.sexe == 'F' %}
+                                        <img src="{{ url_for('static', filename='images/default-swimmer-female.svg') }}" 
+                                             alt="Photo par défaut femme" 
+                                             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); margin-right: 1.5rem;">
                                     {% else %}
-                                        <img src="{{ url_for('static', filename='images/default-swimmer.svg') }}" 
-                                             alt="Photo par défaut" 
+                                        <img src="{{ url_for('static', filename='images/default-swimmer-male.svg') }}" 
+                                             alt="Photo par défaut homme" 
                                              style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); margin-right: 1.5rem;">
                                     {% endif %}
                                     
                                     <div>
                                         <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.25rem;">
-                                            {{ nageur.prenom }} {{ nageur.nom }}
+                                            {{ nageur.prenom }}
                                         </h3>
                                         <p style="color: #999; font-size: 0.95rem;">Maître-nageur certifié</p>
                                     </div>

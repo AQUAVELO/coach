@@ -498,6 +498,8 @@ def init_db():
             tel TEXT NOT NULL,
             ville TEXT NOT NULL,
             dept TEXT NOT NULL,
+            login TEXT UNIQUE,
+            password_hash TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -539,7 +541,23 @@ def init_db():
             print("✅ Colonne 'preferences' ajoutée à la table nageur")
             
     except Exception as e:
-        print(f"⚠️ Erreur lors de la migration: {e}")
+        print(f"⚠️ Erreur lors de la migration nageur: {e}")
+
+    # Migration: Ajouter les colonnes login/password à la table client si elles n'existent pas
+    try:
+        cursor = db.execute("PRAGMA table_info(client)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'login' not in columns:
+            db.execute("ALTER TABLE client ADD COLUMN login TEXT")
+            print("✅ Colonne 'login' ajoutée à la table client")
+        
+        if 'password_hash' not in columns:
+            db.execute("ALTER TABLE client ADD COLUMN password_hash TEXT")
+            print("✅ Colonne 'password_hash' ajoutée à la table client")
+            
+    except Exception as e:
+        print(f"⚠️ Erreur lors de la migration client: {e}")
 
     db.commit()
     db.close()
@@ -577,14 +595,39 @@ def submit_inscription_client():
     tel = request.form.get("tel")
     ville = request.form.get("ville")
     dept = request.form.get("dept")
+    login = request.form.get("login")
+    password = request.form.get("password")
+    password_confirm = request.form.get("password_confirm")
 
+    # Vérification des mots de passe
+    if password != password_confirm:
+        flash("Les mots de passe ne correspondent pas", "danger")
+        return redirect(url_for("inscription_client"))
+
+    # Vérifier si le login existe déjà
     db = get_db()
+    existing_login = db.execute("SELECT id FROM client WHERE login = ?", (login,)).fetchone()
+    if existing_login:
+        flash("Ce nom d'utilisateur est déjà pris", "danger")
+        db.close()
+        return redirect(url_for("inscription_client"))
+
+    # Vérifier si l'email existe déjà
+    existing_email = db.execute("SELECT id FROM client WHERE email = ?", (email,)).fetchone()
+    if existing_email:
+        flash("Cet email est déjà utilisé", "danger")
+        db.close()
+        return redirect(url_for("inscription_client"))
+
+    # Hasher le mot de passe
+    password_hash = generate_password_hash(password)
+
     cursor = db.execute(
         """
-        INSERT INTO client (nom, prenom, email, tel, ville, dept)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO client (nom, prenom, email, tel, ville, dept, login, password_hash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """,
-        (nom, prenom, email, tel, ville, dept),
+        (nom, prenom, email, tel, ville, dept, login, password_hash),
     )
     client_id = cursor.lastrowid
     db.commit()
@@ -592,8 +635,51 @@ def submit_inscription_client():
 
     session["client_id"] = client_id
     session["client_dept"] = dept
+    session["client_logged_in"] = True
+    session["client_login"] = login
 
+    flash(f"Bienvenue {prenom} ! Votre compte a été créé avec succès.", "success")
     return redirect(url_for("choix_nageur"))
+
+
+@app.route("/client/login", methods=["GET", "POST"])
+def client_login():
+    """Page de connexion client"""
+    if request.method == "POST":
+        login = request.form.get("login")
+        password = request.form.get("password")
+
+        db = get_db()
+        client = db.execute(
+            "SELECT * FROM client WHERE login = ?", (login,)
+        ).fetchone()
+        db.close()
+
+        if client and check_password_hash(client["password_hash"], password):
+            session["client_id"] = client["id"]
+            session["client_dept"] = client["dept"]
+            session["client_logged_in"] = True
+            session["client_login"] = client["login"]
+            
+            flash(f"Bienvenue {client['prenom']} ! Vous êtes connecté.", "success")
+            return redirect(url_for("choix_nageur"))
+        else:
+            flash("Identifiants incorrects", "danger")
+
+    return render_template("client_login.html")
+
+
+@app.route("/client/logout")
+def client_logout():
+    """Déconnexion client"""
+    session.pop("client_id", None)
+    session.pop("client_dept", None)
+    session.pop("client_logged_in", None)
+    session.pop("client_login", None)
+    session.pop("nageur_id", None)
+    
+    flash("Vous avez été déconnecté avec succès.", "success")
+    return redirect(url_for("index"))
 
 
 @app.route("/choix_nageur", methods=["GET", "POST"])

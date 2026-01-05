@@ -790,6 +790,18 @@ def contact():
     return render_template("contact.html")
 
 
+@app.route("/mentions-legales")
+def mentions_legales():
+    """Page des mentions légales"""
+    return render_template("mentions_legales.html")
+
+
+@app.route("/politique-confidentialite")
+def politique_confidentialite():
+    """Page de la politique de confidentialité"""
+    return render_template("politique_confidentialite.html")
+
+
 @app.route("/submit_contact", methods=["POST"])
 def submit_contact():
     """Traiter le formulaire de contact"""

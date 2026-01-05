@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); padding: 3rem 0; margin-bottom: 3rem;">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px; text-align: center; color: white;">
+            <h1 style="font-size: 2.5rem; font-weight: 700;">Politique de Confidentialité</h1>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px; line-height: 1.8; color: #444;">
+            <div style="background: white; padding: 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1);">
+                <p>Nous nous engageons à respecter la confidentialité des renseignements personnels que nous collectons sur le site AquaCoach.</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Collecte des renseignements personnels</h3>
+                <p>Nous collectons les renseignements suivants :</p>
+                <ul>
+                    <li>Nom et Prénom</li>
+                    <li>Numéro de téléphone</li>
+                    <li>Adresse email</li>
+                    <li>Ville de résidence</li>
+                </ul>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Finalités</h3>
+                <p>Nous utilisons les renseignements collectés pour :</p>
+                <ul>
+                    <li>Prise de contact</li>
+                    <li>Répondre à vos demandes de mise en relation</li>
+                    <li>Envoi d'emailings marketing (uniquement avec votre consentement)</li>
+                </ul>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Cookies</h3>
+                <p>Nous recueillons certaines informations par le biais de cookies :</p>
+                <ul>
+                    <li>Adresse IP</li>
+                    <li>Système d'exploitation</li>
+                    <li>Pages visitées</li>
+                    <li>Heure et jour de connexion</li>
+                </ul>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Droit d'opposition et de retrait</h3>
+                <p>Vous pouvez exercer vos droits d'opposition et de retrait en nous écrivant à : <strong>claude@alesiaminceur.com</strong></p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Sécurité</h3>
+                <p>Vos données sont conservées dans un environnement sécurisé. Nous utilisons les mesures suivantes :</p>
+                <ul>
+                    <li>Protocole SSL (Secure Sockets Layer)</li>
+                    <li>Sauvegarde informatique régulière</li>
+                    <li>Pare-feu (Firewalls) professionnels</li>
+                </ul>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">Législation</h3>
+                <p>Nous respectons les dispositions du RGPD et la législation française en vigueur. Plus d'informations sur : <a href="https://www.cnil.fr/fr/textes-officiels-europeens-protection-donnees" target="_blank" style="color: var(--primary-color);">https://www.cnil.fr/fr/textes-officiels-europeens-protection-donnees</a></p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('index') }}" class="btn-primary-custom" style="text-decoration: none; display: inline-block;">← Retour à l'accueil</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a> • 
+                <a href="{{ url_for('mentions_legales') }}" style="color: white; text-decoration: none;">Mentions Légales</a> • 
+                <a href="{{ url_for('politique_confidentialite') }}" style="color: white; text-decoration: none;">Politique de Confidentialité</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -192,7 +192,7 @@
         <div style="background: #d4edda; border: 2px solid #c3e6cb; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
             <p style="color: #155724; text-align: center; font-size: 1.1rem; margin: 0;">
                 <strong>📧 Un email de confirmation a été envoyé</strong><br>
-                <span style="font-size: 0.95rem;">Vérifiez votre boîte de réception ou dans vos courriers indésirables pour les détails de contact</span>
+                <span style="font-size: 0.95rem;">Vérifiez votre boîte de réception ou dans vos courrierpour les détails de contact</span>
             </p>
                 </div>
 
@@ -271,5 +271,16 @@
             </a>
         </div>
     </div>
+
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a> • 
+                <a href="{{ url_for('mentions_legales') }}" style="color: white; text-decoration: none;">Mentions Légales</a> • 
+                <a href="{{ url_for('politique_confidentialite') }}" style="color: white; text-decoration: none;">Politique de Confidentialité</a>
+            </p>
+        </div>
+    </footer>
 </body>
 </html>

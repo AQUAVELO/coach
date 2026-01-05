@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentions Légales - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); padding: 3rem 0; margin-bottom: 3rem;">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px; text-align: center; color: white;">
+            <h1 style="font-size: 2.5rem; font-weight: 700;">Mentions Légales</h1>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 0 20px; line-height: 1.8; color: #444;">
+            <div style="background: white; padding: 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1);">
+                <h3 style="color: var(--primary-color);">1. Présentation du site</h3>
+                <p>En vertu de l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique, il est précisé aux utilisateurs du site AquaCoach l'identité des différents intervenants dans le cadre de sa réalisation et de son suivi :</p>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li><strong>📍 Propriétaire :</strong> AQUA CANNES</li>
+                    <li><strong>👨‍💻 Créateur :</strong> Claude RODRIGUEZ</li>
+                    <li><strong>📢 Responsable publication :</strong> AQUA CANNES</li>
+                    <li><strong>🛠️ Webmaster :</strong> Claude RODRIGUEZ - 60 avenue du Docteur Raymond Picaud à CANNES</li>
+                    <li><strong>☁️ Hébergeur :</strong> O2switch - Chemin des Pardiaux, 63000 Clermont-Ferrand, France</li>
+                </ul>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">2. Conditions générales d'utilisation</h3>
+                <p>L'utilisation du site implique l'acceptation pleine et entière des conditions générales d'utilisation ci-après décrites. Ces conditions d'utilisation sont susceptibles d'être modifiées ou complétées à tout moment.</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">3. Description des services fournis</h3>
+                <p>Le site AquaCoach a pour objet de fournir des informations concernant des services destinés aux particuliers souhaitant être mis en relation avec des maîtres-nageurs certifiés.</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">4. Litige avec son centre</h3>
+                <p>En cas de litige avec son centre, l'abonné(e) a la possibilité d'utiliser les services d'un médiateur gratuitement : Médiation de la consommation CM2C - 14 rue Saint Jean 75017 Paris - https://www.cm2c.net</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">5. Propriété intellectuelle</h3>
+                <p>AQUAVELO est propriétaire des droits de propriété intellectuelle ou détient les droits d'usage sur tous les éléments accessibles sur le site. Toute reproduction non autorisée sera considérée comme constitutive d'une contrefaçon.</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">6. Gestion des données personnelles</h3>
+                <p>Conformément aux dispositions de la loi 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, tout utilisateur dispose d'un droit d'accès, de rectification et d'opposition aux données personnelles le concernant.</p>
+
+                <h3 style="color: var(--primary-color); margin-top: 2rem;">7. Droit applicable</h3>
+                <p>Tout litige en relation avec l'utilisation du site est soumis au droit français. Attribution exclusive de juridiction aux tribunaux compétents de Paris.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('index') }}" class="btn-primary-custom" style="text-decoration: none; display: inline-block;">← Retour à l'accueil</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a> • 
+                <a href="{{ url_for('mentions_legales') }}" style="color: white; text-decoration: none;">Mentions Légales</a> • 
+                <a href="{{ url_for('politique_confidentialite') }}" style="color: white; text-decoration: none;">Politique de Confidentialité</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+

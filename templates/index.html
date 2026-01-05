@@ -186,7 +186,10 @@
     <footer class="footer">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
             <p class="footer-text">
-                &copy; 2025 AquaCoach - Tous droits réservés
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('contact') }}" class="footer-link">Contact</a> • 
+                <a href="{{ url_for('mentions_legales') }}" class="footer-link">Mentions Légales</a> • 
+                <a href="{{ url_for('politique_confidentialite') }}" class="footer-link">Politique de Confidentialité</a> • 
                 <a href="{{ url_for('admin_login') }}" class="footer-link">Administration</a>
             </p>
         </div>

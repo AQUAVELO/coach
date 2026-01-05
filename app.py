@@ -784,6 +784,60 @@ def paiement():
     )
 
 
+@app.route("/contact")
+def contact():
+    """Page de contact"""
+    return render_template("contact.html")
+
+
+@app.route("/submit_contact", methods=["POST"])
+def submit_contact():
+    """Traiter le formulaire de contact"""
+    nom = request.form.get("nom")
+    email = request.form.get("email")
+    ville = request.form.get("ville")
+    sujet = request.form.get("sujet")
+    message = request.form.get("message")
+
+    if not nom or not email or not message:
+        flash("Veuillez remplir tous les champs obligatoires.", "danger")
+        return redirect(url_for("contact"))
+
+    # Préparer le contenu de l'email pour l'admin
+    email_body = f"""
+    NOUVEAU MESSAGE DE CONTACT - AQUACOACH
+    
+    Nom : {nom}
+    Email : {email}
+    Ville : {ville if ville else 'Non précisée'}
+    Sujet : {sujet if sujet else 'Sans sujet'}
+    
+    Message :
+    {message}
+    """
+
+    try:
+        # Envoyer l'email à l'admin
+        msg = MIMEMultipart()
+        msg["From"] = f"{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>"
+        msg["To"] = ADMIN_EMAIL
+        msg["Subject"] = f"NOUVEAU CONTACT : {sujet if sujet else 'Message de ' + nom}"
+
+        msg.attach(MIMEText(email_body, "plain"))
+
+        with smtplib.SMTP(MAILJET_HOST, MAILJET_PORT) as server:
+            server.starttls()
+            server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+            server.send_message(msg)
+
+        flash("Votre message a été envoyé avec succès ! Nous vous répondrons rapidement.", "success")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'envoi de l'email de contact: {str(e)}")
+        flash("Votre message a été enregistré, mais un problème est survenu lors de l'envoi de la notification.", "warning")
+
+    return redirect(url_for("contact"))
+
+
 @app.route("/inscription_nageur")
 def inscription_nageur():
     return render_template("inscription_nageur.html", departements=DEPARTEMENTS)

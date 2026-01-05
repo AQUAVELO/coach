@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('contact') }}" class="nav-link" style="color: var(--primary-color);">Contact</a>
+                <a href="{{ url_for('admin_login') }}" class="nav-link">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); padding: 3rem 0; margin-bottom: 3rem;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; text-align: center; color: white;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem;">
+                📞 Contactez-nous
+            </h1>
+            <p style="font-size: 1.2rem; opacity: 0.9;">
+                Besoin d'aide ou d'informations ? Notre équipe vous répond sous 24h
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <section class="section">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div style="background: {% if category == 'success' %}#d4edda; border: 1px solid #c3e6cb; color: #155724;{% else %}#f8d7da; border: 1px solid #f5c6cb; color: #721c24;{% endif %} padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-bottom: 4rem;">
+                
+                <!-- Formulaire de contact -->
+                <div>
+                    <h2 style="color: var(--primary-color); font-size: 1.8rem; margin-bottom: 1.5rem;">
+                        ✉️ Une Question ? Écrivez-nous !
+                    </h2>
+                    <p style="color: #666; margin-bottom: 2rem;">
+                        Remplissez le formulaire ci-dessous en indiquant la ville concernée, nous vous répondrons rapidement.
+                    </p>
+
+                    <form action="{{ url_for('submit_contact') }}" method="POST" class="form-custom">
+                        <label class="form-label-custom" for="nom">Nom et Prénom *</label>
+                        <input type="text" id="nom" name="nom" class="form-control-custom" required>
+
+                        <label class="form-label-custom" for="email">Email *</label>
+                        <input type="email" id="email" name="email" class="form-control-custom" required>
+
+                        <label class="form-label-custom" for="ville">Ville Concernée</label>
+                        <input type="text" id="ville" name="ville" class="form-control-custom">
+
+                        <label class="form-label-custom" for="sujet">Sujet</label>
+                        <select id="sujet" name="sujet" class="form-select-custom" required>
+                            <option value="">Sélectionnez un sujet</option>
+                            <option value="Demande d'information">Demande d'information</option>
+                            <option value="Question sur les tarifs">Question sur les tarifs</option>
+                            <option value="Problème technique">Problème technique</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+
+                        <label class="form-label-custom" for="message">Message *</label>
+                        <textarea id="message" name="message" class="form-control-custom" rows="6" required style="resize: vertical;"></textarea>
+
+                        <button type="submit" class="btn-primary-custom" style="width: 100%; margin-top: 1rem;">
+                            📤 Envoyer mon Message
+                        </button>
+
+                        <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 1rem;">
+                            🔒 Vos données sont sécurisées et ne seront jamais partagées
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Coordonnées -->
+                <div>
+                    <h2 style="color: var(--primary-color); font-size: 1.8rem; margin-bottom: 1.5rem;">
+                        📍 Contact Rapide
+                    </h2>
+                    
+                    <div style="background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                        <p style="color: #666; margin-bottom: 1.5rem;">
+                            Besoin d'une réponse immédiate ? Appelez-nous !
+                        </p>
+                        <div style="margin-bottom: 1rem;">
+                            <a href="tel:0622647095" style="color: var(--primary-color); font-size: 1.5rem; font-weight: 700; text-decoration: none;">
+                                📱 06 22 64 70 95
+                            </a>
+                        </div>
+                        <p style="color: #999; font-size: 0.9rem;">
+                            Lun-Ven : 9h-19h • Sam : 10h-18h
+                        </p>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #e3f4f4 0%, #d0eaea 100%); padding: 2rem; border-radius: 15px; margin-bottom: 2rem;">
+                        <h3 style="color: var(--primary-color); font-size: 1.3rem; margin-bottom: 1.5rem;">
+                            🏢 Gestionnaire du Site
+                        </h3>
+                        
+                        <p style="color: #2c5d63; line-height: 1.8; margin-bottom: 0;">
+                            <strong>Aqua Cannes</strong><br>
+                            60 avenue du Docteur Raymond Picaud<br>
+                            06150 Cannes<br><br>
+                            Capital 15 000 €<br>
+                            RCS 822 269 528<br>
+                            TVA FR44822269528
+                        </p>
+                    </div>
+
+                    <div style="background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1);">
+                        <h3 style="color: var(--primary-color); font-size: 1.3rem; margin-bottom: 1rem;">
+                            📧 Email
+                        </h3>
+                        <a href="mailto:claude@alesiaminceur.com" style="color: var(--primary-color); font-size: 1.1rem; text-decoration: none;">
+                            claude@alesiaminceur.com
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retour à l'accueil -->
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="{{ url_for('index') }}" class="btn-primary-custom" style="text-decoration: none; display: inline-block;">
+                    ← Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

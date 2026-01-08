@@ -35,7 +35,7 @@ MAILJET_HOST = "in-v3.mailjet.com"
 MAILJET_PORT = 587
 MAILJET_USERNAME = "adf33e0c77039ed69396e3a8a07400cb"
 MAILJET_PASSWORD = "05906e966c8e2933b1dc8b0f8bb1e18b"
-MAILJET_FROM_EMAIL = "jacquesverdier4@gmail.com"
+MAILJET_FROM_EMAIL = "contact@aquacoach.fr"
 MAILJET_FROM_NAME = "AquaCoach"
 ADMIN_EMAIL = "aqua.cannes@gmail.com"
 

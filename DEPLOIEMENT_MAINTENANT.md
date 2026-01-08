@@ -139,7 +139,7 @@ MAILJET_HOST = "in-v3.mailjet.com"
 MAILJET_PORT = 587
 MAILJET_USERNAME = "VOTRE_API_KEY"  # API Key publique
 MAILJET_PASSWORD = "VOTRE_SECRET_KEY"  # API Key secrète
-MAILJET_FROM_EMAIL = "jacquesverdier4@gmail.com"  # Email validé
+MAILJET_FROM_EMAIL = "contact@aquacoach.fr"  # Email validé
 MAILJET_FROM_NAME = "AquaCoach"
 ADMIN_EMAIL = "aqua.cannes@gmail.com"
 ```

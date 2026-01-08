@@ -149,7 +149,7 @@ Cette fonctionnalité utilise la même configuration Mailjet que les emails de r
 - `MAILJET_PORT` : 587
 - `MAILJET_USERNAME` : Votre clé API Mailjet
 - `MAILJET_PASSWORD` : Votre clé secrète Mailjet
-- `MAILJET_FROM_EMAIL` : contact@aquacoach.fr
+- `MAILJET_FROM_EMAIL` : jacquesverdier4@gmail.com
 - `MAILJET_FROM_NAME` : AquaCoach
 - `ADMIN_EMAIL` : aqua.cannes@gmail.com
 

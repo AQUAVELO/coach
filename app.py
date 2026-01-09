@@ -983,7 +983,7 @@ def submit_inscription_nageur():
             file.save(filepath)
             photo = filename
 
-    db.execute(
+    cursor = db.execute(
         """
         INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1006,8 +1006,13 @@ def submit_inscription_nageur():
             password_hash
         ),
     )
+    nageur_id = cursor.lastrowid
     db.commit()
     db.close()
+
+    # Connexion automatique après inscription
+    session["nageur_id"] = nageur_id
+    session["nageur_nom"] = f"{prenom} {nom}"
 
     # Envoi des emails de confirmation
     send_nageur_inscription_email(
@@ -1023,6 +1028,7 @@ def submit_inscription_nageur():
     
     # Redirection vers la page de confirmation avec les infos du nageur
     return render_template("confirmation_inscription_nageur.html", nageur={
+        'id': nageur_id,
         'nom': nom,
         'prenom': prenom,
         'email': email,

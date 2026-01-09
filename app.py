@@ -315,7 +315,7 @@ def send_nageur_inscription_email(
                 <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
                     <p style="margin: 10px 0;">
                         🔑 <strong>Accédez à votre espace :</strong> Vous pouvez vous connecter à votre espace personnel pour modifier votre profil à tout moment :<br>
-                        <a href="http://localhost:8080/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
+                        <a href="https://aquacoach.fr/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
                     </p>
                     <p style="margin: 10px 0;">
                         ✅ <strong>Votre profil est maintenant visible</strong> par tous les clients cherchant un maître-nageur dans le département <strong>{nageur_dept}</strong>.
@@ -377,7 +377,7 @@ RÉCAPITULATIF :
 
 QUE SE PASSE-T-IL MAINTENANT ?
 
-🔑 Votre Espace Maître-Nageur : http://localhost:8080/nageur/login
+🔑 Votre Espace Maître-Nageur : https://aquacoach.fr/nageur/login
 
 ✓ Votre profil est maintenant visible par tous les clients cherchant un maître-nageur dans le département {nageur_dept}.
 ✓ Vous serez contacté directement par les clients intéressés.
@@ -473,7 +473,7 @@ def send_nageur_update_email(nageur_prenom, nageur_nom, nageur_email):
                 
                 <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3fb0ac;">
                     <p style="margin: 0;">
-                        🔗 <strong>Votre espace :</strong> <a href="http://localhost:8080/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
+                        🔗 <strong>Votre espace :</strong> <a href="https://aquacoach.fr/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
                     </p>
                 </div>
 
@@ -490,7 +490,7 @@ Bonjour {nageur_prenom} {nageur_nom},
 Nous vous confirmons que les modifications apportées à votre profil AquaCoach ont bien été enregistrées.
 Merci de maintenir vos informations à jour pour les futurs clients.
 
-Votre espace : http://localhost:8080/nageur/login
+Votre espace : https://aquacoach.fr/nageur/login
 
 À très bientôt dans l'eau !
 L'équipe AquaCoach

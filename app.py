@@ -1041,22 +1041,38 @@ def submit_inscription_nageur():
 
 @app.route("/nageur/login", methods=["GET", "POST"])
 def nageur_login():
+# ... code ...
+    return render_template("nageur_login.html")
+
+
+@app.route("/nageur/reset-password", methods=["GET", "POST"])
+def nageur_reset_password():
+    """Réinitialisation du mot de passe nageur"""
     if request.method == "POST":
-        login = request.form.get("login")
-        password = request.form.get("password")
+        email = request.form.get("email")
+        new_password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+
+        if new_password != confirm_password:
+            flash("Les mots de passe ne correspondent pas.", "danger")
+            return render_template("nageur_reset_password.html")
 
         db = get_db()
-        nageur = db.execute("SELECT * FROM nageur WHERE login = ?", (login,)).fetchone()
+        nageur = db.execute("SELECT id, prenom, nom FROM nageur WHERE email = ?", (email,)).fetchone()
 
-        if nageur and check_password_hash(nageur["password_hash"], password):
-            session["nageur_id"] = nageur["id"]
-            session["nageur_nom"] = f"{nageur['prenom']} {nageur['nom']}"
-            flash(f"Bienvenue {nageur['prenom']} !", "success")
-            return redirect(url_for("mon_profil"))
+        if nageur:
+            password_hash = generate_password_hash(new_password)
+            db.execute("UPDATE nageur SET password_hash = ? WHERE id = ?", (password_hash, nageur["id"]))
+            db.commit()
+            db.close()
+            
+            flash("Votre mot de passe a été modifié avec succès. Connectez-vous maintenant.", "success")
+            return redirect(url_for("nageur_login"))
         else:
-            flash("Identifiant ou mot de passe incorrect.", "danger")
+            db.close()
+            flash("Aucun compte trouvé avec cet email.", "danger")
 
-    return render_template("nageur_login.html")
+    return render_template("nageur_reset_password.html")
 
 
 @app.route("/nageur/logout")

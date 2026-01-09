@@ -53,6 +53,12 @@
                     <label class="form-label-custom" for="password">Mot de passe :</label>
                     <input type="password" id="password" name="password" class="form-control-custom" required>
 
+                    <div style="text-align: right; margin-bottom: 1.5rem;">
+                        <a href="{{ url_for('nageur_reset_password') }}" style="color: #666; font-size: 0.9rem; text-decoration: none;">
+                            Mot de passe oublié ?
+                        </a>
+                    </div>
+
                     <button type="submit" class="btn-primary-custom" style="width: 100%; margin-top: 1rem; background-color: #1e6091;">
                         🔓 Se connecter
                     </button>

@@ -314,6 +314,10 @@ def send_nageur_inscription_email(
                 <h3 style="color: #3fb0ac; margin-top: 30px;">🚀 Que se passe-t-il maintenant ?</h3>
                 <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
                     <p style="margin: 10px 0;">
+                        🔑 <strong>Accédez à votre espace :</strong> Vous pouvez vous connecter à votre espace personnel pour modifier votre profil à tout moment :<br>
+                        <a href="http://localhost:8080/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
+                    </p>
+                    <p style="margin: 10px 0;">
                         ✅ <strong>Votre profil est maintenant visible</strong> par tous les clients cherchant un maître-nageur dans le département <strong>{nageur_dept}</strong>.
                     </p>
                     <p style="margin: 10px 0;">
@@ -372,6 +376,8 @@ RÉCAPITULATIF :
 - Tarif : {nageur_tarif}€/séance
 
 QUE SE PASSE-T-IL MAINTENANT ?
+
+🔑 Votre Espace Maître-Nageur : http://localhost:8080/nageur/login
 
 ✓ Votre profil est maintenant visible par tous les clients cherchant un maître-nageur dans le département {nageur_dept}.
 ✓ Vous serez contacté directement par les clients intéressés.
@@ -435,6 +441,70 @@ L'équipe AquaCoach
         print(f"❌ ERREUR EMAIL INSCRIPTION NAGEUR: {e}\n")
         import traceback
         traceback.print_exc()
+        return False
+
+
+def send_nageur_update_email(nageur_prenom, nageur_nom, nageur_email):
+    """Envoie un email de remerciement au nageur après modification de son profil"""
+    print(f"\n🔔 ENVOI D'EMAIL MODIFICATION NAGEUR")
+    print(f"   Nageur: {nageur_prenom} {nageur_nom} <{nageur_email}>")
+
+    try:
+        # Connexion SMTP
+        server = smtplib.SMTP(MAILJET_HOST, MAILJET_PORT, timeout=30)
+        server.starttls()
+        server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Mise à jour de votre profil - AquaCoach"
+        msg["From"] = f"{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>"
+        msg["To"] = nageur_email
+
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #3fb0ac; border-bottom: 3px solid #3fb0ac; padding-bottom: 10px;">
+                    ✅ Profil mis à jour !
+                </h2>
+                <p>Bonjour <strong>{nageur_prenom} {nageur_nom}</strong>,</p>
+                <p>Nous vous confirmons que les modifications apportées à votre profil AquaCoach ont bien été enregistrées.</p>
+                <p>Merci de maintenir vos informations à jour pour les futurs clients.</p>
+                
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3fb0ac;">
+                    <p style="margin: 0;">
+                        🔗 <strong>Votre espace :</strong> <a href="http://localhost:8080/nageur/login" style="color: #3fb0ac; font-weight: bold;">Accéder à mon Espace Maître-Nageur</a>
+                    </p>
+                </div>
+
+                <p>À très bientôt dans l'eau ! 🏊‍♂️<br>
+                <strong>L'équipe AquaCoach</strong></p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text = f"""
+Bonjour {nageur_prenom} {nageur_nom},
+
+Nous vous confirmons que les modifications apportées à votre profil AquaCoach ont bien été enregistrées.
+Merci de maintenir vos informations à jour pour les futurs clients.
+
+Votre espace : http://localhost:8080/nageur/login
+
+À très bientôt dans l'eau !
+L'équipe AquaCoach
+        """
+
+        msg.attach(MIMEText(text, "plain", "utf-8"))
+        msg.attach(MIMEText(html, "html", "utf-8"))
+        server.send_message(msg)
+        server.quit()
+        print(f"✅ Email de mise à jour envoyé à {nageur_email}")
+        return True
+
+    except Exception as e:
+        print(f"❌ ERREUR EMAIL MISE À JOUR NAGEUR: {e}\n")
         return False
 
 
@@ -1053,6 +1123,10 @@ def mon_profil():
             tuple(params),
         )
         db.commit()
+        
+        # Envoi de l'email de confirmation de modification
+        send_nageur_update_email(prenom, nom, email)
+        
         flash("Votre profil a été mis à jour avec succès !", "success")
         return redirect(url_for("mon_profil"))
 

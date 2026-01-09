@@ -26,9 +26,9 @@ ssh aquavelo@aquavelo.fr
 ## 📥 ÉTAPE 2 : Aller dans le dossier du site
 
 ```bash
-cd www/natation
+cd www/coach
 # ou si le chemin est différent :
-cd public_html/natation
+cd public_html/coach
 ```
 
 ---
@@ -85,13 +85,13 @@ whoami
 
 **AVANT :**
 ```apache
-PassengerAppRoot /home/VOTRE_USER/www/natation
+PassengerAppRoot /home/VOTRE_USER/www/coach
 PassengerAppLogFile /home/VOTRE_USER/logs/passenger_aquacoach.log
 ```
 
 **APRÈS (exemple si votre user est "aquavelo"):**
 ```apache
-PassengerAppRoot /home/aquavelo/www/natation
+PassengerAppRoot /home/aquavelo/www/coach
 PassengerAppLogFile /home/aquavelo/logs/passenger_aquacoach.log
 ```
 
@@ -336,7 +336,7 @@ git push origin main
 Cochez chaque étape :
 
 - [ ] Connexion SSH réussie
-- [ ] `cd www/natation` effectué
+- [ ] `cd www/coach` effectué
 - [ ] `git pull origin main` effectué
 - [ ] `.htaccess` modifié (VOTRE_USER et SECRET_KEY)
 - [ ] Base de données sauvegardée
@@ -372,7 +372,7 @@ Si tous les tests passent, votre site est **100% opérationnel** avec :
 Pour les prochaines mises à jour, utilisez simplement le script automatique :
 
 ```bash
-cd ~/www/natation
+cd ~/www/coach
 ./deploy.sh
 ```
 

@@ -9,6 +9,8 @@ from flask import (
     jsonify,
 )
 import sqlite3
+import pymysql
+import pymysql.cursors
 import os
 from datetime import datetime
 import secrets
@@ -21,7 +23,12 @@ from email.mime.multipart import MIMEMultipart
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
-# Configuration
+# Configuration Base de données (MySQL sur o2switch, SQLite en local)
+DB_HOST = os.environ.get('DB_HOST')
+DB_USER = os.environ.get('DB_USER')
+DB_PASS = os.environ.get('DB_PASS')
+DB_NAME = os.environ.get('DB_NAME')
+
 DATABASE = os.path.join(app.instance_path, "aquacoach.db")
 UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -541,9 +548,65 @@ def nageur_login_required(f):
 
 
 def get_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+    if DB_HOST:
+        # Connexion MySQL (o2switch)
+        db = pymysql.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASS,
+            database=DB_NAME,
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=True
+        )
+        return db
+    else:
+        # Connexion SQLite (local)
+        db = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row
+        return db
+
+
+def query_db(query, args=(), one=False):
+    db = get_db()
+    
+    # Adapter le placeholder selon la base
+    if DB_HOST:
+        query = query.replace('?', '%s')
+        
+    try:
+        if DB_HOST:
+            with db.cursor() as cursor:
+                cursor.execute(query, args)
+                rv = cursor.fetchall()
+        else:
+            cur = db.execute(query, args)
+            rv = cur.fetchall()
+            db.commit()
+            
+        return (rv[0] if rv else None) if one else rv
+    finally:
+        db.close()
+
+
+def execute_db(query, args=()):
+    db = get_db()
+    
+    # Adapter le placeholder selon la base
+    if DB_HOST:
+        query = query.replace('?', '%s')
+        
+    try:
+        if DB_HOST:
+            with db.cursor() as cursor:
+                cursor.execute(query, args)
+                last_id = cursor.lastrowid
+        else:
+            cur = db.execute(query, args)
+            db.commit()
+            last_id = cur.lastrowid
+        return last_id
+    finally:
+        db.close()
 
 
 def init_db():
@@ -551,9 +614,15 @@ def init_db():
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
     db = get_db()
-    db.execute("""
+    
+    # Syntaxe adaptée selon la base
+    auto_inc = "AUTO_INCREMENT" if DB_HOST else "AUTOINCREMENT"
+    pk_type = "INT PRIMARY KEY" if DB_HOST else "INTEGER PRIMARY KEY"
+    
+    queries = [
+        f"""
         CREATE TABLE IF NOT EXISTS nageur (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {pk_type} {auto_inc},
             nom TEXT NOT NULL,
             prenom TEXT NOT NULL,
             email TEXT NOT NULL,
@@ -567,96 +636,49 @@ def init_db():
             photo TEXT,
             preferences TEXT,
             sexe TEXT,
-            login TEXT UNIQUE,
+            login VARCHAR(100) UNIQUE,
             password_hash TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    db.execute("""
+        """,
+        f"""
         CREATE TABLE IF NOT EXISTS client (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {pk_type} {auto_inc},
             nom TEXT NOT NULL,
             prenom TEXT NOT NULL,
             email TEXT NOT NULL,
             tel TEXT NOT NULL,
             ville TEXT NOT NULL,
             dept TEXT NOT NULL,
-            login TEXT UNIQUE,
+            login VARCHAR(100) UNIQUE,
             password_hash TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-    """)
-
-    db.execute("""
+        """,
+        f"""
         CREATE TABLE IF NOT EXISTS selection (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {pk_type} {auto_inc},
             client_id INTEGER NOT NULL,
             nageur_id INTEGER NOT NULL,
-            date_selection DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (client_id) REFERENCES client (id),
-            FOREIGN KEY (nageur_id) REFERENCES nageur (id)
+            date_selection DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+        """
+    ]
 
-    # Migration: Ajouter les colonnes manquantes à la table nageur si elles n'existent pas
     try:
-        cursor = db.execute("PRAGMA table_info(nageur)")
-        columns = [row[1] for row in cursor.fetchall()]
-        
-        if 'disponibilites' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN disponibilites TEXT")
-            print("✅ Colonne 'disponibilites' ajoutée à la table nageur")
-        
-        if 'presentation' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN presentation TEXT")
-            print("✅ Colonne 'presentation' ajoutée à la table nageur")
-        
-        if 'diplome' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN diplome TEXT")
-            print("✅ Colonne 'diplome' ajoutée à la table nageur")
-        
-        if 'photo' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN photo TEXT")
-            print("✅ Colonne 'photo' ajoutée à la table nageur")
-        
-        if 'preferences' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN preferences TEXT")
-            print("✅ Colonne 'preferences' ajoutée à la table nageur")
-        
-        if 'sexe' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN sexe TEXT")
-            print("✅ Colonne 'sexe' ajoutée à la table nageur")
-            
-        if 'login' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN login TEXT")
-            print("✅ Colonne 'login' ajoutée à la table nageur")
-            
-        if 'password_hash' not in columns:
-            db.execute("ALTER TABLE nageur ADD COLUMN password_hash TEXT")
-            print("✅ Colonne 'password_hash' ajoutée à la table nageur")
-            
+        if DB_HOST:
+            with db.cursor() as cursor:
+                for q in queries:
+                    cursor.execute(q)
+        else:
+            for q in queries:
+                db.execute(q)
+            db.commit()
+        print("✅ Base de données initialisée")
     except Exception as e:
-        print(f"⚠️ Erreur lors de la migration nageur: {e}")
-
-    # Migration: Ajouter les colonnes login/password à la table client si elles n'existent pas
-    try:
-        cursor = db.execute("PRAGMA table_info(client)")
-        columns = [row[1] for row in cursor.fetchall()]
-        
-        if 'login' not in columns:
-            db.execute("ALTER TABLE client ADD COLUMN login TEXT")
-            print("✅ Colonne 'login' ajoutée à la table client")
-        
-        if 'password_hash' not in columns:
-            db.execute("ALTER TABLE client ADD COLUMN password_hash TEXT")
-            print("✅ Colonne 'password_hash' ajoutée à la table client")
-            
-    except Exception as e:
-        print(f"⚠️ Erreur lors de la migration client: {e}")
-
-    db.commit()
-    db.close()
+        print(f"⚠️ Erreur initialisation BDD: {e}")
+    finally:
+        db.close()
 
 
 # ============================================
@@ -666,15 +688,9 @@ def init_db():
 
 @app.route("/")
 def index():
-    db = get_db()
     # Récupérer les derniers nageurs et clients pour la page d'accueil
-    nageurs = db.execute(
-        "SELECT * FROM nageur ORDER BY date_inscription DESC LIMIT 6"
-    ).fetchall()
-    clients = db.execute(
-        "SELECT * FROM client ORDER BY date_inscription DESC LIMIT 3"
-    ).fetchall()
-    db.close()
+    nageurs = query_db("SELECT * FROM nageur ORDER BY date_inscription DESC LIMIT 6")
+    clients = query_db("SELECT * FROM client ORDER BY date_inscription DESC LIMIT 3")
     return render_template("index.html", nageurs=nageurs, clients=clients)
 
 
@@ -692,17 +708,13 @@ def submit_inscription_client():
     ville = request.form.get("ville")
     dept = request.form.get("dept")
 
-    db = get_db()
-    cursor = db.execute(
+    client_id = execute_db(
         """
         INSERT INTO client (nom, prenom, email, tel, ville, dept)
         VALUES (?, ?, ?, ?, ?, ?)
     """,
         (nom, prenom, email, tel, ville, dept),
     )
-    client_id = cursor.lastrowid
-    db.commit()
-    db.close()
 
     session["client_id"] = client_id
     session["client_dept"] = dept
@@ -717,11 +729,7 @@ def client_login():
         login = request.form.get("login")
         password = request.form.get("password")
 
-        db = get_db()
-        client = db.execute(
-            "SELECT * FROM client WHERE login = ?", (login,)
-        ).fetchone()
-        db.close()
+        client = query_db("SELECT * FROM client WHERE login = ?", (login,), one=True)
 
         if client and check_password_hash(client["password_hash"], password):
             session["client_id"] = client["id"]
@@ -764,11 +772,7 @@ def choix_nageur():
     if "client_dept" not in session:
         return redirect(url_for("inscription_client"))
 
-    db = get_db()
-    nageurs = db.execute(
-        "SELECT * FROM nageur WHERE dept = ?", (session["client_dept"],)
-    ).fetchall()
-    db.close()
+    nageurs = query_db("SELECT * FROM nageur WHERE dept = ?", (session["client_dept"],))
 
     return render_template("choix_nageur.html", nageurs=nageurs, dept=session["client_dept"])
 
@@ -779,19 +783,12 @@ def confirmation_paiement():
     if "nageur_ids" not in session or "client_id" not in session:
         return redirect(url_for("index"))
 
-    db = get_db()
-    
     # Récupérer tous les nageurs sélectionnés
     nageur_ids = session["nageur_ids"]
-    placeholders = ','.join('?' * len(nageur_ids))
-    nageurs = db.execute(
-        f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids
-    ).fetchall()
+    placeholders = ','.join(['?'] * len(nageur_ids))
+    nageurs = query_db(f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids)
     
-    client = db.execute(
-        "SELECT * FROM client WHERE id = ?", (session["client_id"],)
-    ).fetchone()
-    db.close()
+    client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
 
     if not nageurs or not client:
         flash("Erreur lors de la récupération des informations", "danger")
@@ -814,29 +811,22 @@ def paiement():
     if "nageur_ids" not in session or "client_id" not in session:
         return redirect(url_for("index"))
 
-    db = get_db()
-    
     # Récupérer tous les nageurs sélectionnés
     nageur_ids = session["nageur_ids"]
-    placeholders = ','.join('?' * len(nageur_ids))
-    nageurs = db.execute(
-        f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids
-    ).fetchall()
+    placeholders = ','.join(['?'] * len(nageur_ids))
+    nageurs = query_db(f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids)
     
-    client = db.execute(
-        "SELECT * FROM client WHERE id = ?", (session["client_id"],)
-    ).fetchone()
+    client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
 
     # Enregistrer toutes les sélections
     for nageur_id in nageur_ids:
-        db.execute(
+        execute_db(
             """
             INSERT INTO selection (client_id, nageur_id, date_selection)
             VALUES (?, ?, ?)
         """,
             (session["client_id"], nageur_id, datetime.now()),
         )
-    db.commit()
 
     # Envoyer un email pour chaque nageur
     all_emails_sent = True
@@ -854,8 +844,6 @@ def paiement():
         )
         if not code_validation:
             all_emails_sent = False
-
-    db.close()
 
     total = len(nageurs) * 2.00
     code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
@@ -963,11 +951,9 @@ def submit_inscription_nageur():
     login = request.form.get("login")
     password = request.form.get("password")
 
-    db = get_db()
-    
     # Vérifier si le login existe déjà
     if login:
-        existing = db.execute("SELECT id FROM nageur WHERE login = ?", (login,)).fetchone()
+        existing = query_db("SELECT id FROM nageur WHERE login = ?", (login,), one=True)
         if existing:
             flash("Cet identifiant est déjà utilisé. Veuillez en choisir un autre.", "danger")
             return redirect(url_for("inscription_nageur"))
@@ -983,7 +969,7 @@ def submit_inscription_nageur():
             file.save(filepath)
             photo = filename
 
-    cursor = db.execute(
+    nageur_id = execute_db(
         """
         INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1006,9 +992,6 @@ def submit_inscription_nageur():
             password_hash
         ),
     )
-    nageur_id = cursor.lastrowid
-    db.commit()
-    db.close()
 
     # Connexion automatique après inscription
     session["nageur_id"] = nageur_id
@@ -1047,7 +1030,24 @@ def submit_inscription_nageur():
 
 @app.route("/nageur/login", methods=["GET", "POST"])
 def nageur_login():
-# ... code ...
+    if request.method == "POST":
+        login_input = request.form.get("login", "").strip().lower()
+        password = request.form.get("password", "")
+
+        # Recherche par login ou email (insensible à la casse)
+        nageur = query_db("SELECT * FROM nageur WHERE LOWER(login) = ? OR LOWER(email) = ?", (login_input, login_input), one=True)
+
+        if nageur:
+            if check_password_hash(nageur["password_hash"], password):
+                session["nageur_id"] = nageur["id"]
+                session["nageur_nom"] = f"{nageur['prenom']} {nageur['nom']}"
+                flash(f"Bienvenue {nageur['prenom']} !", "success")
+                return redirect(url_for("mon_profil"))
+            else:
+                flash("Mot de passe incorrect.", "danger")
+        else:
+            flash("Identifiant ou email non trouvé.", "danger")
+
     return render_template("nageur_login.html")
 
 
@@ -1063,19 +1063,15 @@ def nageur_reset_password():
             flash("Les mots de passe ne correspondent pas.", "danger")
             return render_template("nageur_reset_password.html")
 
-        db = get_db()
-        nageur = db.execute("SELECT id, prenom, nom FROM nageur WHERE email = ?", (email,)).fetchone()
+        nageur = query_db("SELECT id, prenom, nom FROM nageur WHERE email = ?", (email,), one=True)
 
         if nageur:
             password_hash = generate_password_hash(new_password)
-            db.execute("UPDATE nageur SET password_hash = ? WHERE id = ?", (password_hash, nageur["id"]))
-            db.commit()
-            db.close()
+            execute_db("UPDATE nageur SET password_hash = ? WHERE id = ?", (password_hash, nageur["id"]))
             
             flash("Votre mot de passe a été modifié avec succès. Connectez-vous maintenant.", "success")
             return redirect(url_for("nageur_login"))
         else:
-            db.close()
             flash("Aucun compte trouvé avec cet email.", "danger")
 
     return render_template("nageur_reset_password.html")
@@ -1092,7 +1088,6 @@ def nageur_logout():
 @app.route("/mon_profil", methods=["GET", "POST"])
 @nageur_login_required
 def mon_profil():
-    db = get_db()
     nageur_id = session["nageur_id"]
 
     if request.method == "POST":
@@ -1118,7 +1113,7 @@ def mon_profil():
             file = request.files["photo"]
             if file and file.filename:
                 # Supprimer l'ancienne photo si elle existe
-                old_photo = db.execute("SELECT photo FROM nageur WHERE id = ?", (nageur_id,)).fetchone()
+                old_photo = query_db("SELECT photo FROM nageur WHERE id = ?", (nageur_id,), one=True)
                 if old_photo and old_photo["photo"]:
                     old_path = os.path.join(UPLOAD_FOLDER, old_photo["photo"])
                     if os.path.exists(old_path):
@@ -1135,7 +1130,7 @@ def mon_profil():
 
         params.append(nageur_id)
 
-        db.execute(
+        execute_db(
             f"""
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?, 
@@ -1144,7 +1139,6 @@ def mon_profil():
         """,
             tuple(params),
         )
-        db.commit()
         
         # Envoi de l'email de confirmation de modification
         send_nageur_update_email(prenom, nom, email)
@@ -1152,7 +1146,7 @@ def mon_profil():
         flash("Votre profil a été mis à jour avec succès !", "success")
         return redirect(url_for("mon_profil"))
 
-    nageur = db.execute("SELECT * FROM nageur WHERE id = ?", (nageur_id,)).fetchone()
+    nageur = query_db("SELECT * FROM nageur WHERE id = ?", (nageur_id,), one=True)
     return render_template("mon_profil.html", nageur=nageur, departements=DEPARTEMENTS)
 
 
@@ -1189,22 +1183,16 @@ def admin_logout():
 @app.route("/admin")
 @login_required
 def admin_index():
-    db = get_db()
-    clients = db.execute(
-        "SELECT * FROM client ORDER BY date_inscription DESC"
-    ).fetchall()
-    nageurs = db.execute(
-        "SELECT * FROM nageur ORDER BY date_inscription DESC"
-    ).fetchall()
-    selections = db.execute("""
+    clients = query_db("SELECT * FROM client ORDER BY date_inscription DESC")
+    nageurs = query_db("SELECT * FROM nageur ORDER BY date_inscription DESC")
+    selections = query_db("""
         SELECT s.*, c.nom as client_nom, c.prenom as client_prenom, 
                n.nom as nageur_nom, n.prenom as nageur_prenom
         FROM selection s
         JOIN client c ON s.client_id = c.id
         JOIN nageur n ON s.nageur_id = n.id
         ORDER BY s.date_selection DESC
-    """).fetchall()
-    db.close()
+    """)
 
     return render_template(
         "admin.html", clients=clients, nageurs=nageurs, selections=selections
@@ -1219,7 +1207,6 @@ def admin_index():
 @login_required
 def edit_client(id):
     """Modifier un client"""
-    db = get_db()
     
     if request.method == 'POST':
         nom = request.form.get('nom')
@@ -1228,21 +1215,32 @@ def edit_client(id):
         tel = request.form.get('tel')
         ville = request.form.get('ville')
         dept = request.form.get('dept')
+        login = request.form.get('login')
+        password = request.form.get('password')
         
-        db.execute('''
+        # SQL et paramètres de base
+        sql = '''
             UPDATE client 
-            SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?
-            WHERE id = ?
-        ''', (nom, prenom, email, tel, ville, dept, id))
-        db.commit()
-        db.close()
+            SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, login = ?
+        '''
+        params = [nom, prenom, email, tel, ville, dept, login]
+
+        # Si un nouveau mot de passe est saisi, on le hache
+        if password and password.strip():
+            sql += ", password_hash = ?"
+            params.append(generate_password_hash(password))
+            print(f"🔐 Mot de passe mis à jour pour client {login}")
+
+        sql += " WHERE id = ?"
+        params.append(id)
+
+        execute_db(sql, tuple(params))
         
-        flash('Client modifié avec succès !', 'success')
+        flash('✅ Client modifié avec succès !', 'success')
         return redirect(url_for('admin_index'))
     
     # GET : afficher le formulaire
-    client = db.execute('SELECT * FROM client WHERE id = ?', (id,)).fetchone()
-    db.close()
+    client = query_db('SELECT * FROM client WHERE id = ?', (id,), one=True)
     
     if not client:
         flash('Client introuvable', 'danger')
@@ -1255,14 +1253,11 @@ def edit_client(id):
 @login_required
 def delete_client(id):
     """Supprimer un client"""
-    db = get_db()
     
     # Supprimer d'abord les sélections associées
-    db.execute('DELETE FROM selection WHERE client_id = ?', (id,))
+    execute_db('DELETE FROM selection WHERE client_id = ?', (id,))
     # Puis supprimer le client
-    db.execute('DELETE FROM client WHERE id = ?', (id,))
-    db.commit()
-    db.close()
+    execute_db('DELETE FROM client WHERE id = ?', (id,))
     
     flash('Client supprimé avec succès !', 'success')
     return redirect(url_for('admin_index'))
@@ -1272,7 +1267,6 @@ def delete_client(id):
 @login_required
 def edit_nageur(id):
     """Modifier un maître-nageur"""
-    db = get_db()
     
     if request.method == 'POST':
         nom = request.form.get('nom')
@@ -1287,9 +1281,11 @@ def edit_nageur(id):
         disponibilites = request.form.get('disponibilites')
         tarif = request.form.get('tarif')
         preferences = request.form.get('preferences')
+        login = request.form.get('login')
+        password = request.form.get('password')
         
         # Récupérer la photo actuelle
-        nageur = db.execute('SELECT photo FROM nageur WHERE id = ?', (id,)).fetchone()
+        nageur = query_db('SELECT photo FROM nageur WHERE id = ?', (id,), one=True)
         current_photo = nageur['photo'] if nageur else None
         new_photo = current_photo
         
@@ -1321,21 +1317,31 @@ def edit_nageur(id):
                 new_photo = filename
                 print(f"📸 Nouvelle photo uploadée : {filename}")
         
-        db.execute('''
+        # SQL et paramètres de base
+        sql = '''
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?,
-                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?, preferences = ?
-            WHERE id = ?
-        ''', (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, new_photo, preferences, id))
-        db.commit()
-        db.close()
+                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?, preferences = ?,
+                login = ?
+        '''
+        params = [nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, new_photo, preferences, login]
+
+        # Si un nouveau mot de passe est saisi, on le hache
+        if password and password.strip():
+            sql += ", password_hash = ?"
+            params.append(generate_password_hash(password))
+            print(f"🔐 Mot de passe mis à jour pour {login}")
+
+        sql += " WHERE id = ?"
+        params.append(id)
+
+        execute_db(sql, tuple(params))
         
         flash('✅ Maître-nageur modifié avec succès !', 'success')
         return redirect(url_for('admin_index'))
     
     # GET : afficher le formulaire
-    nageur = db.execute('SELECT * FROM nageur WHERE id = ?', (id,)).fetchone()
-    db.close()
+    nageur = query_db('SELECT * FROM nageur WHERE id = ?', (id,), one=True)
     
     if not nageur:
         flash('Maître-nageur introuvable', 'danger')
@@ -1348,17 +1354,15 @@ def edit_nageur(id):
 @login_required
 def delete_nageur(id):
     """Supprimer un maître-nageur"""
-    db = get_db()
     
     # Supprimer d'abord les sélections associées
-    db.execute('DELETE FROM selection WHERE nageur_id = ?', (id,))
+    execute_db('DELETE FROM selection WHERE nageur_id = ?', (id,))
     # Puis supprimer le nageur
-    db.execute('DELETE FROM nageur WHERE id = ?', (id,))
-    db.commit()
-    db.close()
+    execute_db('DELETE FROM nageur WHERE id = ?', (id,))
     
     flash('Maître-nageur supprimé avec succès !', 'success')
     return redirect(url_for('admin_index'))
+
 
 
 # ============================================

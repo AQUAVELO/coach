@@ -63,6 +63,26 @@
                         </select>
                     </div>
 
+                    <!-- Section Identifiants et Sécurité -->
+                    <div style="background: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem; border: 2px solid #e0e0e0;">
+                        <h3 style="color: var(--text-dark); margin-bottom: 1rem;">🔐 Identifiants et Sécurité</h3>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Login :</label>
+                            <input type="text" name="login" value="{{ client.login or '' }}"
+                                   style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                                   placeholder="Identifiant de connexion">
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Nouveau mot de passe :</label>
+                            <input type="password" name="password"
+                                   style="width: 100%; padding: 0.8rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                                   placeholder="Laisser vide pour ne pas changer">
+                            <small style="color: #666; display: block; margin-top: 0.3rem;">⚠️ Laissez vide si vous ne souhaitez pas modifier le mot de passe</small>
+                        </div>
+                    </div>
+
                     <div style="display: flex; gap: 1rem;">
                         <button type="submit" 
                                 style="flex: 1; background: var(--primary-color); color: white; padding: 1rem; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">

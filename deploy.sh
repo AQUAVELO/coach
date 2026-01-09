@@ -137,8 +137,8 @@ echo "   2. Tester les modifications admin en ligne"
 echo "   3. Vérifier les logs : ~/logs/error_log"
 echo "   4. Tester les requêtes POST"
 echo ""
-echo "🔗 Accès : http://votre-domaine.com"
-echo "🔑 Admin : http://votre-domaine.com/admin/login"
+echo "🔗 Accès : http://aquacoach.fr"
+echo "🔑 Admin : http://aquacoach.fr/admin/login"
 echo ""
 
 

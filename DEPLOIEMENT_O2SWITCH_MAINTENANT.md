@@ -9,16 +9,15 @@
 Ouvrez un terminal et connectez-vous à votre serveur o2switch :
 
 ```bash
-ssh votre-utilisateur@votredomaine.com
+ssh votre-utilisateur@aquacoach.fr
 ```
 
 **Remplacez :**
 - `votre-utilisateur` par votre nom d'utilisateur o2switch
-- `votredomaine.com` par votre domaine
 
 **Exemple :**
 ```bash
-ssh aquavelo@aquavelo.fr
+ssh aquavelo@aquacoach.fr
 ```
 
 ---
@@ -219,7 +218,7 @@ Attendez **30 secondes** pour que Passenger redémarre complètement.
 ### Test 1 : Page d'accueil
 Ouvrez votre navigateur et allez sur :
 ```
-http://votredomaine.com
+http://aquacoach.fr
 ```
 
 **✅ Doit afficher** : La page d'accueil AquaCoach avec le fond piscine
@@ -228,7 +227,7 @@ http://votredomaine.com
 
 ### Test 2 : Page admin
 ```
-http://votredomaine.com/admin/login
+http://aquacoach.fr/admin/login
 ```
 
 **Connectez-vous :**

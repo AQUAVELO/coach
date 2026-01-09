@@ -151,7 +151,7 @@
                             <td>{{ client.tel }}</td>
                             <td>{{ client.ville }}</td>
                             <td><span class="badge badge-success">{{ client.dept }}</span></td>
-                            <td>{{ client.date_inscription[:10] if client.date_inscription else 'N/A' }}</td>
+                            <td>{{ client.date_inscription.strftime('%Y-%m-%d') if client.date_inscription else 'N/A' }}</td>
                             <td>
                                 <div class="action-buttons">
                                     <a href="{{ url_for('edit_client', id=client.id) }}" class="btn-edit">✏️ Modifier</a>
@@ -205,7 +205,7 @@
                             <td><span class="badge badge-success">{{ nageur.dept }}</span></td>
                             <td>{{ nageur.diplome }}</td>
                             <td><strong>{{ nageur.tarif }}€</strong></td>
-                            <td>{{ nageur.date_inscription[:10] if nageur.date_inscription else 'N/A' }}</td>
+                            <td>{{ nageur.date_inscription.strftime('%Y-%m-%d') if nageur.date_inscription else 'N/A' }}</td>
                             <td>
                                 <div class="action-buttons">
                                     <a href="{{ url_for('edit_nageur', id=nageur.id) }}" class="btn-edit">✏️ Modifier</a>

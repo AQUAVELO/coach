@@ -246,7 +246,7 @@
                             <td>{{ selection.id }}</td>
                             <td><strong>{{ selection.client_prenom }} {{ selection.client_nom }}</strong></td>
                             <td><strong>{{ selection.nageur_prenom }} {{ selection.nageur_nom }}</strong></td>
-                            <td>{{ selection.date_selection[:16] if selection.date_selection else 'N/A' }}</td>
+                            <td>{{ selection.date_selection.strftime('%Y-%m-%d %H:%M') if selection.date_selection else 'N/A' }}</td>
                         </tr>
                                 {% else %}
                         <tr>

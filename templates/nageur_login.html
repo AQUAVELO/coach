@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Maître-Nageur - AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">← Retour à l'accueil</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="section">
+        <div class="container" style="max-width: 500px; margin: 0 auto; padding: 0 20px;">
+            <div style="background: white; padding: 4rem 3rem; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); text-align: center;">
+                <!-- Swimmer Icon -->
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #1e6091 0%, #164469 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; box-shadow: 0 10px 30px rgba(30,96,145,0.3);">
+                    <span style="font-size: 3.5rem; color: white;">🏊</span>
+                </div>
+
+                <h1 style="color: #1e6091; font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;">
+                    Espace Nageur
+                </h1>
+                
+                <p style="font-size: 1.1rem; color: #666; margin-bottom: 3rem;">
+                    Connectez-vous pour modifier votre fiche
+                </p>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div style="background: {% if category == 'danger' %}#f8d7da; border: 1px solid #f5c6cb; color: #721c24;{% elif category == 'warning' %}#fff3cd; border: 1px solid #ffc107; color: #856404;{% else %}#d4edda; border: 1px solid #c3e6cb; color: #155724;{% endif %} padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Login Form -->
+                <form action="{{ url_for('nageur_login') }}" method="POST" style="text-align: left;">
+                    <label class="form-label-custom" for="login">Identifiant :</label>
+                    <input type="text" id="login" name="login" class="form-control-custom" required autofocus>
+
+                    <label class="form-label-custom" for="password">Mot de passe :</label>
+                    <input type="password" id="password" name="password" class="form-control-custom" required>
+
+                    <button type="submit" class="btn-primary-custom" style="width: 100%; margin-top: 1rem; background-color: #1e6091;">
+                        🔓 Se connecter
+                    </button>
+                </form>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #E0E0E0;">
+                    <p style="font-size: 0.9rem; color: #666;">
+                        Pas encore inscrit ?<br>
+                        <a href="{{ url_for('inscription_nageur') }}" style="color: #1e6091; text-decoration: none; font-weight: 600;">
+                            Devenez Maître-Nageur ici
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

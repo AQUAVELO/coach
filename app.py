@@ -454,6 +454,17 @@ def login_required(f):
     return decorated_function
 
 
+def nageur_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "nageur_id" not in session:
+            flash("Veuillez vous connecter à votre espace Maître-Nageur.", "warning")
+            return redirect(url_for("nageur_login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 # ============================================
 # DATABASE FUNCTIONS
 # ============================================
@@ -486,6 +497,8 @@ def init_db():
             photo TEXT,
             preferences TEXT,
             sexe TEXT,
+            login TEXT UNIQUE,
+            password_hash TEXT,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -544,6 +557,14 @@ def init_db():
         if 'sexe' not in columns:
             db.execute("ALTER TABLE nageur ADD COLUMN sexe TEXT")
             print("✅ Colonne 'sexe' ajoutée à la table nageur")
+            
+        if 'login' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN login TEXT")
+            print("✅ Colonne 'login' ajoutée à la table nageur")
+            
+        if 'password_hash' not in columns:
+            db.execute("ALTER TABLE nageur ADD COLUMN password_hash TEXT")
+            print("✅ Colonne 'password_hash' ajoutée à la table nageur")
             
     except Exception as e:
         print(f"⚠️ Erreur lors de la migration nageur: {e}")
@@ -869,6 +890,19 @@ def submit_inscription_nageur():
     disponibilites = request.form.get("disponibilites")
     tarif = request.form.get("tarif")
     preferences = request.form.get("preferences")
+    login = request.form.get("login")
+    password = request.form.get("password")
+
+    db = get_db()
+    
+    # Vérifier si le login existe déjà
+    if login:
+        existing = db.execute("SELECT id FROM nageur WHERE login = ?", (login,)).fetchone()
+        if existing:
+            flash("Cet identifiant est déjà utilisé. Veuillez en choisir un autre.", "danger")
+            return redirect(url_for("inscription_nageur"))
+
+    password_hash = generate_password_hash(password) if password else None
 
     photo = None
     if "photo" in request.files:
@@ -879,11 +913,10 @@ def submit_inscription_nageur():
             file.save(filepath)
             photo = filename
 
-    db = get_db()
     db.execute(
         """
-        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             nom,
@@ -899,6 +932,8 @@ def submit_inscription_nageur():
             tarif,
             photo,
             preferences,
+            login,
+            password_hash
         ),
     )
     db.commit()
@@ -927,6 +962,102 @@ def submit_inscription_nageur():
         'diplome': diplome,
         'tarif': tarif
     })
+
+
+# ============================================
+# NAGEUR SPACE ROUTES
+# ============================================
+
+
+@app.route("/nageur/login", methods=["GET", "POST"])
+def nageur_login():
+    if request.method == "POST":
+        login = request.form.get("login")
+        password = request.form.get("password")
+
+        db = get_db()
+        nageur = db.execute("SELECT * FROM nageur WHERE login = ?", (login,)).fetchone()
+
+        if nageur and check_password_hash(nageur["password_hash"], password):
+            session["nageur_id"] = nageur["id"]
+            session["nageur_nom"] = f"{nageur['prenom']} {nageur['nom']}"
+            flash(f"Bienvenue {nageur['prenom']} !", "success")
+            return redirect(url_for("mon_profil"))
+        else:
+            flash("Identifiant ou mot de passe incorrect.", "danger")
+
+    return render_template("nageur_login.html")
+
+
+@app.route("/nageur/logout")
+def nageur_logout():
+    session.pop("nageur_id", None)
+    session.pop("nageur_nom", None)
+    flash("Vous avez été déconnecté.", "info")
+    return redirect(url_for("index"))
+
+
+@app.route("/mon_profil", methods=["GET", "POST"])
+@nageur_login_required
+def mon_profil():
+    db = get_db()
+    nageur_id = session["nageur_id"]
+
+    if request.method == "POST":
+        # Traitement de la mise à jour
+        nom = request.form.get("nom")
+        prenom = request.form.get("prenom")
+        email = request.form.get("email")
+        tel = request.form.get("tel")
+        ville = request.form.get("ville")
+        dept = request.form.get("dept")
+        sexe = request.form.get("sexe")
+        diplome = request.form.get("diplome")
+        presentation = request.form.get("presentation")
+        disponibilites = request.form.get("disponibilites")
+        tarif = request.form.get("tarif")
+        preferences = request.form.get("preferences")
+
+        # Gestion de la photo
+        photo_sql = ""
+        params = [nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, preferences]
+
+        if "photo" in request.files:
+            file = request.files["photo"]
+            if file and file.filename:
+                # Supprimer l'ancienne photo si elle existe
+                old_photo = db.execute("SELECT photo FROM nageur WHERE id = ?", (nageur_id,)).fetchone()
+                if old_photo and old_photo["photo"]:
+                    old_path = os.path.join(UPLOAD_FOLDER, old_photo["photo"])
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except:
+                            pass
+
+                filename = f"{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                photo_sql = ", photo = ?"
+                params.append(filename)
+
+        params.append(nageur_id)
+
+        db.execute(
+            f"""
+            UPDATE nageur 
+            SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?, 
+                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, preferences = ? {photo_sql}
+            WHERE id = ?
+        """,
+            tuple(params),
+        )
+        db.commit()
+        flash("Votre profil a été mis à jour avec succès !", "success")
+        return redirect(url_for("mon_profil"))
+
+    nageur = db.execute("SELECT * FROM nageur WHERE id = ?", (nageur_id,)).fetchone()
+    return render_template("mon_profil.html", nageur=nageur, departements=DEPARTEMENTS)
 
 
 # ============================================

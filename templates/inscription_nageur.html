@@ -35,6 +35,23 @@
             {% endif %}
 
             <form action="{{ url_for('submit_inscription_nageur') }}" method="POST" enctype="multipart/form-data" class="form-custom">
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #e9ecef;">
+                    <h3 style="margin-top: 0; color: var(--primary-color); font-size: 1.2rem; margin-bottom: 1rem;">🔐 Vos identifiants de connexion</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Ces informations vous permettront de modifier votre fiche plus tard.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label class="form-label-custom" for="login">Identifiant (Login) :</label>
+                            <input type="text" id="login" name="login" class="form-control-custom" placeholder="ex: jean.dupont" required>
+                        </div>
+
+                        <div>
+                            <label class="form-label-custom" for="password">Mot de passe :</label>
+                            <input type="password" id="password" name="password" class="form-control-custom" required>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div>
                         <label class="form-label-custom" for="nom">Nom :</label>
@@ -130,7 +147,8 @@
                 &copy; 2025 AquaCoach - Tous droits réservés • 
                 <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a> • 
                 <a href="{{ url_for('mentions_legales') }}" style="color: white; text-decoration: none;">Mentions Légales</a> • 
-                <a href="{{ url_for('politique_confidentialite') }}" style="color: white; text-decoration: none;">Politique de Confidentialité</a>
+                <a href="{{ url_for('politique_confidentialite') }}" style="color: white; text-decoration: none;">Politique de Confidentialité</a> •
+                <a href="{{ url_for('nageur_login') }}" style="color: white; text-decoration: none;">Espace Nageur</a>
             </p>
         </div>
     </footer>

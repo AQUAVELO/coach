@@ -19,6 +19,7 @@ from functools import wraps
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import stripe
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -32,6 +33,13 @@ DB_NAME = os.environ.get('DB_NAME')
 DATABASE = os.path.join(app.instance_path, "aquacoach.db")
 UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+
+# Configuration Stripe
+# En TEST : utilisez pk_test_... et sk_test_...
+# En PRODUCTION : utilisez pk_live_... et sk_live_...
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', 'pk_test_51So9GsGUhp5rORHT9dOHNkIXY4ezdnKOLQU0GQsvFTJAMYK3vy3gOvJnKU07dfM2zYugYP1vNqiItGxnY3Tyk8Zc00Og6IaBV8')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51So9GsGUhp5rORHTUmeaiVgxMtyzAzTdeadun9jaoqXn05EsXIRstOibAmET2OyOtYDXebrWFR4m6pWtYf1OmCEf00hE5AzyXr')
+stripe.api_key = STRIPE_SECRET_KEY
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -857,7 +865,7 @@ def choix_nageur():
 
 @app.route("/confirmation_paiement")
 def confirmation_paiement():
-    """Page de confirmation de paiement (MODE DÉMO)"""
+    """Page de confirmation avant paiement Stripe"""
     if "nageur_ids" not in session or "client_id" not in session:
         return redirect(url_for("index"))
 
@@ -880,65 +888,149 @@ def confirmation_paiement():
         total=total,
         count=len(nageurs),
         client_email=client["email"],
+        stripe_public_key=STRIPE_PUBLIC_KEY,
     )
 
 
-@app.route("/paiement", methods=["POST"])
-def paiement():
-    """Traiter le paiement simulé (MODE DÉMO)"""
+@app.route("/create-checkout-session", methods=["POST"])
+def create_checkout_session():
+    """Créer une session Stripe Checkout"""
     if "nageur_ids" not in session or "client_id" not in session:
-        return redirect(url_for("index"))
+        return jsonify({"error": "Session invalide"}), 400
 
-    # Récupérer tous les nageurs sélectionnés
     nageur_ids = session["nageur_ids"]
     placeholders = ','.join(['?'] * len(nageur_ids))
     nageurs = query_db(f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids)
-    
     client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
 
-    # Enregistrer toutes les sélections
-    for nageur_id in nageur_ids:
-        execute_db(
-            """
-            INSERT INTO selection (client_id, nageur_id, date_selection)
-            VALUES (?, ?, ?)
-        """,
-            (session["client_id"], nageur_id, datetime.now()),
-        )
+    if not nageurs or not client:
+        return jsonify({"error": "Données invalides"}), 400
 
-    # Envoyer un email pour chaque nageur
-    all_emails_sent = True
-    for nageur in nageurs:
-        code_validation = send_confirmation_email(
-            client_email=client["email"],
+    # Construire la description des nageurs
+    nageurs_noms = ", ".join([f"{n['prenom']} {n['nom']}" for n in nageurs])
+    
+    try:
+        # Déterminer l'URL de base
+        if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
+            base_url = f"http://{request.host}"
+        else:
+            base_url = f"https://{request.host}"
+
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'eur',
+                    'product_data': {
+                        'name': f'Coordonnées Maître-Nageur',
+                        'description': f'Accès aux coordonnées de : {nageurs_noms}',
+                    },
+                    'unit_amount': 200,  # 2€ en centimes
+                },
+                'quantity': len(nageurs),
+            }],
+            mode='payment',
+            success_url=base_url + url_for('paiement_success') + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=base_url + url_for('paiement_cancel'),
+            customer_email=client["email"],
+            metadata={
+                'client_id': session["client_id"],
+                'nageur_ids': ','.join(nageur_ids),
+            }
+        )
+        return jsonify({'sessionId': checkout_session.id})
+    except Exception as e:
+        print(f"❌ Erreur Stripe: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/paiement/success")
+def paiement_success():
+    """Page de succès après paiement Stripe"""
+    session_id = request.args.get('session_id')
+    
+    if not session_id:
+        flash("Erreur: session de paiement invalide", "danger")
+        return redirect(url_for("index"))
+
+    try:
+        # Récupérer les détails de la session Stripe
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+        
+        if checkout_session.payment_status != 'paid':
+            flash("Le paiement n'a pas été confirmé", "danger")
+            return redirect(url_for("index"))
+
+        # Récupérer les métadonnées
+        client_id = checkout_session.metadata.get('client_id')
+        nageur_ids = checkout_session.metadata.get('nageur_ids', '').split(',')
+
+        if not client_id or not nageur_ids:
+            flash("Erreur: données de paiement manquantes", "danger")
+            return redirect(url_for("index"))
+
+        # Récupérer les infos
+        placeholders = ','.join(['?'] * len(nageur_ids))
+        nageurs = query_db(f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids)
+        client = query_db("SELECT * FROM client WHERE id = ?", (client_id,), one=True)
+
+        if not nageurs or not client:
+            flash("Erreur: données introuvables", "danger")
+            return redirect(url_for("index"))
+
+        # Enregistrer les sélections
+        for nageur_id in nageur_ids:
+            execute_db(
+                """
+                INSERT INTO selection (client_id, nageur_id, date_selection)
+                VALUES (?, ?, ?)
+            """,
+                (client_id, nageur_id, datetime.now()),
+            )
+
+        # Envoyer les emails
+        for nageur in nageurs:
+            send_confirmation_email(
+                client_email=client["email"],
+                client_prenom=client["prenom"],
+                client_nom=client["nom"],
+                nageur_prenom=nageur["prenom"],
+                nageur_nom=nageur["nom"],
+                nageur_email=nageur["email"],
+                nageur_tel=nageur["tel"],
+                nageur_ville=nageur["ville"],
+                montant="2,00 €",
+            )
+
+        total = len(nageurs) * 2.00
+        code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+        # Nettoyer la session
+        session.pop("nageur_ids", None)
+        session.pop("client_id", None)
+        session.pop("client_dept", None)
+
+        return render_template(
+            "success.html",
             client_prenom=client["prenom"],
             client_nom=client["nom"],
-            nageur_prenom=nageur["prenom"],
-            nageur_nom=nageur["nom"],
-            nageur_email=nageur["email"],
-            nageur_tel=nageur["tel"],
-            nageur_ville=nageur["ville"],
-            montant="2,00 €",
+            nageurs=nageurs,
+            total=total,
+            count=len(nageurs),
+            code_validation=code_validation,
         )
-        if not code_validation:
-            all_emails_sent = False
 
-    total = len(nageurs) * 2.00
-    code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    except Exception as e:
+        print(f"❌ Erreur récupération paiement: {e}")
+        flash("Erreur lors de la confirmation du paiement", "danger")
+        return redirect(url_for("index"))
 
-    # Nettoyer la session
-    session.pop("nageur_ids", None)
-    session.pop("client_id", None)
 
-    return render_template(
-        "success.html",
-        client_prenom=client["prenom"],
-        client_nom=client["nom"],
-        nageurs=nageurs,
-        total=total,
-        count=len(nageurs),
-        code_validation=code_validation,
-    )
+@app.route("/paiement/cancel")
+def paiement_cancel():
+    """Page d'annulation de paiement"""
+    flash("Le paiement a été annulé. Vous pouvez réessayer.", "warning")
+    return redirect(url_for("confirmation_paiement"))
 
 
 @app.route("/contact")

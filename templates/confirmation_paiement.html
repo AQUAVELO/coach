@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paiement - AquaCoach</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         .payment-container {
             max-width: 500px;
@@ -41,32 +42,6 @@
             font-size: 14px;
         }
         
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #2c5d63;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d0eaea;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #3fb0ac;
-            box-shadow: 0 0 0 3px rgba(63, 176, 172, 0.1);
-        }
-        
         .pay-button {
             width: 100%;
             padding: 16px;
@@ -88,39 +63,27 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(63, 176, 172, 0.4);
         }
+
+        .pay-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         
         .security-badge {
             text-align: center;
             margin-top: 20px;
             color: #8a9ea1;
             font-size: 13px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .security-icon {
-            font-size: 18px;
-        }
-        
-        .demo-notice {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #856404;
-            font-weight: 500;
         }
         
         .card-icons {
             display: flex;
             gap: 8px;
             justify-content: center;
-            margin-top: 15px;
-            font-size: 24px;
+            margin: 20px 0;
+            font-size: 32px;
         }
         
         .reservation-info {
@@ -135,52 +98,166 @@
         .reservation-info strong {
             color: #2c5d63;
         }
+
+        .nageurs-list {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nageurs-list h4 {
+            margin: 0 0 10px 0;
+            color: #2c5d63;
+        }
+
+        .nageurs-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .nageurs-list li {
+            color: #5a7c7f;
+            padding: 3px 0;
+        }
+
+        .email-info {
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2e7d32;
+        }
+
+        .stripe-badge {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .stripe-badge img {
+            height: 30px;
+            opacity: 0.7;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #3fb0ac;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="payment-container">
-        <div class="demo-notice">
-            ⚠️ MODE DÉMO - Aucun paiement réel n'est effectué
-        </div>
+        <h2 style="text-align: center; color: #2c5d63; margin-bottom: 20px;">
+            🌊 Finaliser votre commande
+        </h2>
         
         <div class="reservation-info">
-            <strong>Paiement pour mise en relation</strong>
+            <strong>📋 Mise en relation avec un Maître-Nageur</strong>
+            <p style="margin: 10px 0 0 0;">Vous allez recevoir les coordonnées complètes du/des maître(s)-nageur(s) sélectionné(s).</p>
+        </div>
+
+        <div class="nageurs-list">
+            <h4>🏊 Maître(s)-Nageur(s) sélectionné(s) :</h4>
+            <ul>
+                {% for nageur in nageurs %}
+                <li><strong>{{ nageur.prenom }} {{ nageur.nom }}</strong> - {{ nageur.ville }} ({{ nageur.dept }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="email-info">
+            📧 Un email sera envoyé à : <strong>{{ client_email }}</strong>
         </div>
         
         <div class="price-card">
-            <div class="price-title">Frais de dossier</div>
+            <div class="price-title">Frais de mise en relation</div>
             <div class="price-amount">{{ "%.2f"|format(total) }} €</div>
-            <div class="price-subtitle">{{ count }} nageur{{ 's' if count > 1 else '' }} × 2,00 € = {{ "%.2f"|format(total) }} €</div>
+            <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+
+        <button id="checkout-button" class="pay-button">
+            💳 Payer {{ "%.2f"|format(total) }} € par carte
+        </button>
+
+        <div class="card-icons">
+            <span title="Visa">💳</span>
+            <span title="Mastercard">💳</span>
+            <span title="Amex">💳</span>
         </div>
         
-        <form action="{{ url_for('paiement') }}" method="POST">
-            <div class="form-group">
-                <label>Email :</label>
-                <input type="email" name="email" value="{{ client_email }}" readonly style="background-color: #f8f9fa;">
-            </div>
-            
-            <div class="form-group">
-                <label>Informations de carte :</label>
-                <input type="text" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242" style="background-color: #f8f9fa;" readonly>
-            </div>
-            
-            <div class="card-icons">
-                <span>💳</span>
-                <span>💳</span>
-                <span>💳</span>
-            </div>
-            
-            <button type="submit" class="pay-button">
-                💳 Payer {{ "%.2f"|format(total) }} €
-            </button>
-            
-            <div class="security-badge">
-                <span class="security-icon">🔒</span>
-                Paiement sécurisé (Mode démo)
-                <br>
-                <small>Vos données sont simulées et sécurisées</small>
-            </div>
-        </form>
+        <div class="security-badge">
+            🔒 Paiement 100% sécurisé par Stripe
+            <br>
+            <small>Vos données bancaires ne transitent jamais par nos serveurs</small>
+        </div>
+
+        <a href="{{ url_for('choix_nageur') }}" class="back-link">← Modifier ma sélection</a>
     </div>
+
+    <script>
+        var stripe = Stripe('{{ stripe_public_key }}');
+        var checkoutButton = document.getElementById('checkout-button');
+        var errorMessage = document.getElementById('error-message');
+
+        checkoutButton.addEventListener('click', function() {
+            checkoutButton.disabled = true;
+            checkoutButton.innerHTML = '⏳ Redirection vers le paiement...';
+            errorMessage.style.display = 'none';
+
+            fetch('/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.error) {
+                    errorMessage.textContent = '❌ ' + data.error;
+                    errorMessage.style.display = 'block';
+                    checkoutButton.disabled = false;
+                    checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
+                } else {
+                    return stripe.redirectToCheckout({ sessionId: data.sessionId });
+                }
+            })
+            .then(function(result) {
+                if (result && result.error) {
+                    errorMessage.textContent = '❌ ' + result.error.message;
+                    errorMessage.style.display = 'block';
+                    checkoutButton.disabled = false;
+                    checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                errorMessage.textContent = '❌ Une erreur est survenue. Veuillez réessayer.';
+                errorMessage.style.display = 'block';
+                checkoutButton.disabled = false;
+                checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
+            });
+        });
+    </script>
 </body>
 </html>

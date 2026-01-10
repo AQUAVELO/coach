@@ -515,6 +515,81 @@ L'équipe AquaCoach
         return False
 
 
+def send_client_inscription_email(client_prenom, client_nom, client_email, client_tel, client_ville, client_dept):
+    """Envoie un email à l'admin quand un nouveau client s'inscrit"""
+    print(f"\n🔔 ENVOI D'EMAIL INSCRIPTION CLIENT")
+    print(f"   Client: {client_prenom} {client_nom} <{client_email}>")
+
+    try:
+        # Connexion SMTP
+        server = smtplib.SMTP(MAILJET_HOST, MAILJET_PORT, timeout=30)
+        server.starttls()
+        server.login(MAILJET_USERNAME, MAILJET_PASSWORD)
+
+        # Email à l'admin
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"🆕 Nouveau client inscrit : {client_prenom} {client_nom}"
+        msg["From"] = f"{MAILJET_FROM_NAME} <{MAILJET_FROM_EMAIL}>"
+        msg["To"] = ADMIN_EMAIL
+
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #3fb0ac; border-bottom: 3px solid #3fb0ac; padding-bottom: 10px;">
+                    🆕 Nouveau Client Inscrit !
+                </h2>
+
+                <p>Un nouveau client vient de s'inscrire sur AquaCoach :</p>
+
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0;"><strong>👤 Nom :</strong> {client_prenom} {client_nom}</li>
+                        <li style="padding: 8px 0;"><strong>📧 Email :</strong> {client_email}</li>
+                        <li style="padding: 8px 0;"><strong>📞 Téléphone :</strong> {client_tel}</li>
+                        <li style="padding: 8px 0;"><strong>📍 Localisation :</strong> {client_ville} ({client_dept})</li>
+                    </ul>
+                </div>
+
+                <p style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    ⏳ <strong>En attente d'achat</strong> - Ce client n'a pas encore acheté de prestation.
+                </p>
+
+                <p>
+                    🔗 <a href="https://aquacoach.fr/admin" style="color: #3fb0ac; font-weight: bold;">Accéder à l'administration</a>
+                </p>
+
+                <p>L'équipe AquaCoach 🌊</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        text = f"""
+Nouveau client inscrit sur AquaCoach !
+
+Nom : {client_prenom} {client_nom}
+Email : {client_email}
+Téléphone : {client_tel}
+Localisation : {client_ville} ({client_dept})
+
+⏳ En attente d'achat - Ce client n'a pas encore acheté de prestation.
+
+Administration : https://aquacoach.fr/admin
+        """
+
+        msg.attach(MIMEText(text, "plain", "utf-8"))
+        msg.attach(MIMEText(html, "html", "utf-8"))
+        server.send_message(msg)
+        server.quit()
+        print(f"✅ Email inscription client envoyé à {ADMIN_EMAIL}")
+        return True
+
+    except Exception as e:
+        print(f"❌ ERREUR EMAIL INSCRIPTION CLIENT: {e}\n")
+        return False
+
+
 # ============================================
 # AUTHENTICATION
 # ============================================
@@ -718,6 +793,9 @@ def submit_inscription_client():
 
     session["client_id"] = client_id
     session["client_dept"] = dept
+
+    # Envoyer un email à l'admin pour notifier de l'inscription
+    send_client_inscription_email(prenom, nom, email, tel, ville, dept)
 
     return redirect(url_for("choix_nageur"))
 

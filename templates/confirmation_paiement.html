@@ -128,15 +128,11 @@
             <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
         </div>
 
-        {% if count > 1 %}
-        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
-            <strong>⚠️ Important :</strong> Sur la page Stripe, modifiez la quantité à <strong>{{ count }}</strong> avant de payer.
-        </div>
-        {% endif %}
-        
-        <a href="{{ payment_url }}" class="pay-button">
-            💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
-        </a>
+        <form action="{{ url_for('create_checkout_session') }}" method="POST">
+            <button type="submit" class="pay-button">
+                💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
+            </button>
+        </form>
         
         <div class="security-badge">
             🔒 Paiement 100% sécurisé par Stripe

@@ -19,6 +19,7 @@ from functools import wraps
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import stripe
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -33,11 +34,11 @@ DATABASE = os.path.join(app.instance_path, "aquacoach.db")
 UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
-# Configuration Stripe Payment Link
-# Créez votre Payment Link dans le Dashboard Stripe et collez l'URL ici
-# TEST : https://buy.stripe.com/test_xxxxx
-# PRODUCTION : https://buy.stripe.com/xxxxx
-STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/5kQaEYd6D6Co3jE2JDe7m01')
+# Configuration Stripe API (Checkout Session)
+# Clés TEST par défaut, remplacer par les clés LIVE en production via .htaccess
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51So9GsGUhp5rORHTUmeaiVgxMtyzAzTdeadun9jaoqXn05EsXIRstOibAmET2OyOtYDXebrWFR4m6pWtYf1OmCEf00hE5AzyXr')
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', 'pk_test_51So9GsGUhp5rORHT9dOHNkIXY4ezdnKOLQU0GQsvFTJAMYK3vy3gOvJnKU07dfM2zYugYP1vNqiItGxnY3Tyk8Zc00Og6IaBV8')
+stripe.api_key = STRIPE_SECRET_KEY
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -863,7 +864,7 @@ def choix_nageur():
 
 @app.route("/confirmation_paiement")
 def confirmation_paiement():
-    """Page de confirmation avant paiement via Payment Link"""
+    """Page de confirmation avant paiement via Stripe Checkout"""
     if "nageur_ids" not in session or "client_id" not in session:
         return redirect(url_for("index"))
 
@@ -879,9 +880,6 @@ def confirmation_paiement():
         return redirect(url_for("index"))
 
     total = len(nageurs) * 2.00  # 2€ par nageur
-    
-    # Construire l'URL du Payment Link avec la quantité
-    payment_url = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}"
 
     return render_template(
         "confirmation_paiement.html",
@@ -889,13 +887,57 @@ def confirmation_paiement():
         total=total,
         count=len(nageurs),
         client_email=client["email"],
-        payment_url=payment_url,
+        stripe_public_key=STRIPE_PUBLIC_KEY,
     )
 
 
-@app.route("/paiement/confirmer", methods=["GET", "POST"])
-def paiement_confirmer():
-    """Confirmer le paiement après retour de Stripe"""
+@app.route("/create-checkout-session", methods=["POST"])
+def create_checkout_session():
+    """Créer une session Stripe Checkout avec le montant exact"""
+    if "nageur_ids" not in session or "client_id" not in session:
+        return redirect(url_for("index"))
+
+    nageur_ids = session["nageur_ids"]
+    client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
+    
+    if not client:
+        flash("Erreur: client non trouvé", "danger")
+        return redirect(url_for("index"))
+
+    quantity = len(nageur_ids)
+    
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'eur',
+                    'product_data': {
+                        'name': 'Mise en relation Maître-Nageur',
+                        'description': f'Accès aux coordonnées de {quantity} maître-nageur(s)',
+                    },
+                    'unit_amount': 200,  # 2€ en centimes
+                },
+                'quantity': quantity,
+            }],
+            mode='payment',
+            customer_email=client['email'],
+            success_url=url_for('paiement_success', _external=True),
+            cancel_url=url_for('paiement_cancel', _external=True),
+            metadata={
+                'client_id': session["client_id"],
+                'nageur_ids': ','.join(map(str, nageur_ids)),
+            }
+        )
+        return redirect(checkout_session.url, code=303)
+    except Exception as e:
+        flash(f"Erreur Stripe: {str(e)}", "danger")
+        return redirect(url_for("confirmation_paiement"))
+
+
+@app.route("/paiement/success")
+def paiement_success():
+    """Page de succès après paiement Stripe"""
     if "nageur_ids" not in session or "client_id" not in session:
         flash("Session expirée. Veuillez recommencer.", "danger")
         return redirect(url_for("index"))
@@ -909,7 +951,7 @@ def paiement_confirmer():
         flash("Erreur lors de la récupération des informations", "danger")
         return redirect(url_for("index"))
 
-    # Enregistrer les sélections
+    # Enregistrer les sélections dans la base
     for nageur_id in nageur_ids:
         execute_db(
             """
@@ -919,7 +961,7 @@ def paiement_confirmer():
             (session["client_id"], nageur_id, datetime.now()),
         )
 
-    # Envoyer les emails
+    # Envoyer les emails de confirmation
     for nageur in nageurs:
         send_confirmation_email(
             client_email=client["email"],
@@ -944,12 +986,17 @@ def paiement_confirmer():
     return render_template(
         "success.html",
         client_prenom=client["prenom"],
-        client_nom=client["nom"],
         nageurs=nageurs,
         total=total,
-        count=len(nageurs),
         code_validation=code_validation,
     )
+
+
+@app.route("/paiement/cancel")
+def paiement_cancel():
+    """Page d'annulation de paiement"""
+    flash("Paiement annulé. Vous pouvez réessayer.", "warning")
+    return redirect(url_for("confirmation_paiement"))
 
 
 @app.route("/contact")

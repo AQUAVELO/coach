@@ -37,7 +37,7 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 # Créez votre Payment Link dans le Dashboard Stripe et collez l'URL ici
 # TEST : https://buy.stripe.com/test_xxxxx
 # PRODUCTION : https://buy.stripe.com/xxxxx
-STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/test_VOTRE_LIEN_ICI')
+STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/test_3cIaEX3WZ9v3flofwNc3m00')
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"

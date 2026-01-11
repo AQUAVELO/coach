@@ -970,6 +970,56 @@ def politique_confidentialite():
     return render_template("politique_confidentialite.html")
 
 
+@app.route("/robots.txt")
+def robots():
+    """Fichier robots.txt pour le SEO"""
+    return app.send_static_file("robots.txt")
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    """Sitemap XML pour le SEO"""
+    sitemap_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://aquacoach.fr/</loc>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/inscription_nageur</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/inscription_client</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/nageur/login</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/contact</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/mentions-legales</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/politique-confidentialite</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+</urlset>"""
+    return sitemap_xml, 200, {'Content-Type': 'application/xml'}
+
+
 @app.route("/submit_contact", methods=["POST"])
 def submit_contact():
     """Traiter le formulaire de contact"""

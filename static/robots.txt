@@ -1,0 +1,20 @@
+# robots.txt pour AquaCoach
+User-agent: *
+Allow: /
+
+# Pages importantes
+Allow: /
+Allow: /inscription_nageur
+Allow: /inscription_client
+Allow: /contact
+Allow: /mentions-legales
+Allow: /politique-confidentialite
+
+# Pages à ne pas indexer
+Disallow: /admin
+Disallow: /admin/
+Disallow: /paiement/
+Disallow: /create-checkout-session
+
+# Sitemap
+Sitemap: https://aquacoach.fr/sitemap.xml

@@ -64,24 +64,6 @@
             color: white;
         }
 
-        .confirm-button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .confirm-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-        
         .security-badge {
             text-align: center;
             margin-top: 20px;
@@ -123,35 +105,7 @@
             text-decoration: underline;
         }
 
-        /* Étape 1 : Avant paiement */
-        #step1 {
-            display: block;
-        }
-
-        /* Étape 2 : Après clic sur Payer */
-        #step2 {
-            display: none;
-        }
-
-        .waiting-message {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
-            text-align: center;
-        }
-
-        .waiting-message h4 {
-            margin: 0 0 10px 0;
-            color: #856404;
-        }
-
-        .waiting-message p {
-            margin: 0;
-            color: #856404;
-        }
-    </style>
+        </style>
 </head>
 <body>
     <div class="payment-container">
@@ -174,56 +128,23 @@
             <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
         </div>
 
-        <!-- ÉTAPE 1 : Bouton Payer -->
-        <div id="step1">
-            {% if count > 1 %}
-            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3fb0ac;">
-                <strong>⚠️ Important :</strong> Vérifiez que la quantité affichée sur Stripe est bien <strong>{{ count }}</strong> avant de payer.
-            </div>
-            {% endif %}
-            
-            <a href="{{ payment_url }}" target="_blank" class="pay-button" onclick="showStep2()">
-                💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
-            </a>
-            
-            <div class="security-badge">
-                🔒 Paiement 100% sécurisé par Stripe
-                <br>
-                <small>Vos données bancaires ne transitent jamais par nos serveurs</small>
-            </div>
+        {% if count > 1 %}
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+            <strong>⚠️ Important :</strong> Sur la page Stripe, modifiez la quantité à <strong>{{ count }}</strong> avant de payer.
         </div>
-
-        <!-- ÉTAPE 2 : Après avoir cliqué sur Payer -->
-        <div id="step2">
-            <div class="waiting-message">
-                <h4>💳 Paiement en cours...</h4>
-                <p>Une fois votre paiement effectué sur Stripe, cliquez sur le bouton ci-dessous.</p>
-            </div>
-
-            <form action="{{ url_for('paiement_confirmer') }}" method="POST">
-                <button type="submit" class="confirm-button">
-                    ✅ J'ai payé - Recevoir les coordonnées
-                </button>
-            </form>
-
-            <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
-                <a href="{{ payment_url }}" target="_blank" style="color: #3fb0ac;">
-                    🔄 Rouvrir la page de paiement Stripe
-                </a>
-            </p>
+        {% endif %}
+        
+        <a href="{{ payment_url }}" class="pay-button">
+            💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
+        </a>
+        
+        <div class="security-badge">
+            🔒 Paiement 100% sécurisé par Stripe
+            <br>
+            <small>Après paiement, vous serez redirigé automatiquement</small>
         </div>
 
         <a href="{{ url_for('choix_nageur') }}" class="back-link">← Modifier ma sélection</a>
     </div>
-
-    <script>
-        function showStep2() {
-            // Afficher l'étape 2 après 2 secondes (temps d'ouvrir Stripe)
-            setTimeout(function() {
-                document.getElementById('step1').style.display = 'none';
-                document.getElementById('step2').style.display = 'block';
-            }, 2000);
-        }
-    </script>
 </body>
 </html>

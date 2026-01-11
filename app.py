@@ -37,7 +37,7 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 # Créez votre Payment Link dans le Dashboard Stripe et collez l'URL ici
 # TEST : https://buy.stripe.com/test_xxxxx
 # PRODUCTION : https://buy.stripe.com/xxxxx
-STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/dRm8wQ9Ure4Q9I2dohe7m02')
+STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/5kQaEYd6D6Co3jE2JDe7m01')
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -880,8 +880,8 @@ def confirmation_paiement():
 
     total = len(nageurs) * 2.00  # 2€ par nageur
     
-    # Construire l'URL du Payment Link avec la quantité
-    payment_url = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}"
+    # Construire l'URL avec quantité, email pré-rempli et ID client
+    payment_url = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}&client_reference_id={session['client_id']}"
 
     return render_template(
         "confirmation_paiement.html",

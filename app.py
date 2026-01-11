@@ -880,8 +880,9 @@ def confirmation_paiement():
 
     total = len(nageurs) * 2.00  # 2€ par nageur
     
-    # Construire l'URL avec quantité, email pré-rempli et ID client
-    payment_url = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}&client_reference_id={session['client_id']}"
+    # GÉNÉRATION DU LIEN DYNAMIQUE
+    # On ajoute ?quantity=X et les autres paramètres à la fin du lien Stripe
+    stripe_link = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}&client_reference_id={session['client_id']}"
 
     return render_template(
         "confirmation_paiement.html",
@@ -889,7 +890,7 @@ def confirmation_paiement():
         total=total,
         count=len(nageurs),
         client_email=client["email"],
-        payment_url=payment_url,
+        stripe_link=stripe_link,
     )
 
 

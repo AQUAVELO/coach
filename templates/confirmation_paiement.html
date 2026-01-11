@@ -134,7 +134,7 @@
         </div>
         {% endif %}
         
-        <a href="{{ payment_url }}" class="pay-button">
+        <a href="{{ stripe_link }}" class="pay-button">
             💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
         </a>
         

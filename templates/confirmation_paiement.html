@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paiement - AquaCoach</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://js.stripe.com/v3/"></script>
     <style>
         .payment-container {
             max-width: 500px;
@@ -53,22 +52,34 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 15px;
         }
         
         .pay-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(63, 176, 172, 0.4);
+            color: white;
         }
 
-        .pay-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .confirm-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .confirm-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
         
         .security-badge {
@@ -78,27 +89,6 @@
             font-size: 13px;
         }
         
-        .card-icons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin: 20px 0;
-            font-size: 32px;
-        }
-        
-        .reservation-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            font-size: 14px;
-            color: #5a7c7f;
-        }
-        
-        .reservation-info strong {
-            color: #2c5d63;
-        }
-
         .nageurs-list {
             background: #f0f9ff;
             padding: 15px;
@@ -130,25 +120,6 @@
             color: #2e7d32;
         }
 
-        .stripe-badge {
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .stripe-badge img {
-            height: 30px;
-            opacity: 0.7;
-        }
-
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
         .back-link {
             display: block;
             text-align: center;
@@ -160,6 +131,29 @@
         .back-link:hover {
             text-decoration: underline;
         }
+
+        .steps {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .steps h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+
+        .steps ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #856404;
+        }
+
+        .steps li {
+            padding: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -167,11 +161,6 @@
         <h2 style="text-align: center; color: #2c5d63; margin-bottom: 20px;">
             🌊 Finaliser votre commande
         </h2>
-        
-        <div class="reservation-info">
-            <strong>📋 Mise en relation avec un Maître-Nageur</strong>
-            <p style="margin: 10px 0 0 0;">Vous allez recevoir les coordonnées complètes du/des maître(s)-nageur(s) sélectionné(s).</p>
-        </div>
 
         <div class="nageurs-list">
             <h4>🏊 Maître(s)-Nageur(s) sélectionné(s) :</h4>
@@ -183,7 +172,7 @@
         </div>
 
         <div class="email-info">
-            📧 Un email sera envoyé à : <strong>{{ client_email }}</strong>
+            📧 Les coordonnées seront envoyées à : <strong>{{ client_email }}</strong>
         </div>
         
         <div class="price-card">
@@ -192,17 +181,26 @@
             <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
         </div>
 
-        <div class="error-message" id="error-message"></div>
-
-        <button id="checkout-button" class="pay-button">
-            💳 Payer {{ "%.2f"|format(total) }} € par carte
-        </button>
-
-        <div class="card-icons">
-            <span title="Visa">💳</span>
-            <span title="Mastercard">💳</span>
-            <span title="Amex">💳</span>
+        <div class="steps">
+            <h4>📋 Comment procéder :</h4>
+            <ol>
+                <li><strong>Cliquez sur "Payer"</strong> - Vous serez redirigé vers Stripe</li>
+                <li><strong>Effectuez le paiement</strong> sur la page sécurisée Stripe</li>
+                <li><strong>Revenez ici</strong> et cliquez sur "J'ai payé"</li>
+            </ol>
         </div>
+
+        <!-- Bouton vers Stripe Payment Link -->
+        <a href="{{ payment_url }}" target="_blank" class="pay-button">
+            💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
+        </a>
+
+        <!-- Formulaire de confirmation après paiement -->
+        <form action="{{ url_for('paiement_confirmer') }}" method="POST">
+            <button type="submit" class="confirm-button">
+                ✅ J'ai payé - Recevoir les coordonnées
+            </button>
+        </form>
         
         <div class="security-badge">
             🔒 Paiement 100% sécurisé par Stripe
@@ -212,52 +210,5 @@
 
         <a href="{{ url_for('choix_nageur') }}" class="back-link">← Modifier ma sélection</a>
     </div>
-
-    <script>
-        var stripe = Stripe('{{ stripe_public_key }}');
-        var checkoutButton = document.getElementById('checkout-button');
-        var errorMessage = document.getElementById('error-message');
-
-        checkoutButton.addEventListener('click', function() {
-            checkoutButton.disabled = true;
-            checkoutButton.innerHTML = '⏳ Redirection vers le paiement...';
-            errorMessage.style.display = 'none';
-
-            fetch('/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.error) {
-                    errorMessage.textContent = '❌ ' + data.error;
-                    errorMessage.style.display = 'block';
-                    checkoutButton.disabled = false;
-                    checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
-                } else {
-                    return stripe.redirectToCheckout({ sessionId: data.sessionId });
-                }
-            })
-            .then(function(result) {
-                if (result && result.error) {
-                    errorMessage.textContent = '❌ ' + result.error.message;
-                    errorMessage.style.display = 'block';
-                    checkoutButton.disabled = false;
-                    checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
-                }
-            })
-            .catch(function(error) {
-                console.error('Error:', error);
-                errorMessage.textContent = '❌ Une erreur est survenue. Veuillez réessayer.';
-                errorMessage.style.display = 'block';
-                checkoutButton.disabled = false;
-                checkoutButton.innerHTML = '💳 Payer {{ "%.2f"|format(total) }} € par carte';
-            });
-        });
-    </script>
 </body>
 </html>

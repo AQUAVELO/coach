@@ -176,6 +176,12 @@
 
         <!-- ÉTAPE 1 : Bouton Payer -->
         <div id="step1">
+            {% if count > 1 %}
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3fb0ac;">
+                <strong>⚠️ Important :</strong> Vérifiez que la quantité affichée sur Stripe est bien <strong>{{ count }}</strong> avant de payer.
+            </div>
+            {% endif %}
+            
             <a href="{{ payment_url }}" target="_blank" class="pay-button" onclick="showStep2()">
                 💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
             </a>

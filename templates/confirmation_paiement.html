@@ -132,27 +132,33 @@
             text-decoration: underline;
         }
 
-        .steps {
+        /* Étape 1 : Avant paiement */
+        #step1 {
+            display: block;
+        }
+
+        /* Étape 2 : Après clic sur Payer */
+        #step2 {
+            display: none;
+        }
+
+        .waiting-message {
             background: #fff3cd;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 4px solid #ffc107;
+            text-align: center;
         }
 
-        .steps h4 {
+        .waiting-message h4 {
             margin: 0 0 10px 0;
             color: #856404;
         }
 
-        .steps ol {
+        .waiting-message p {
             margin: 0;
-            padding-left: 20px;
             color: #856404;
-        }
-
-        .steps li {
-            padding: 5px 0;
         }
     </style>
 </head>
@@ -181,34 +187,50 @@
             <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
         </div>
 
-        <div class="steps">
-            <h4>📋 Comment procéder :</h4>
-            <ol>
-                <li><strong>Cliquez sur "Payer"</strong> - Vous serez redirigé vers Stripe</li>
-                <li><strong>Effectuez le paiement</strong> sur la page sécurisée Stripe</li>
-                <li><strong>Revenez ici</strong> et cliquez sur "J'ai payé"</li>
-            </ol>
+        <!-- ÉTAPE 1 : Bouton Payer -->
+        <div id="step1">
+            <a href="{{ payment_url }}" target="_blank" class="pay-button" onclick="showStep2()">
+                💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
+            </a>
+            
+            <div class="security-badge">
+                🔒 Paiement 100% sécurisé par Stripe
+                <br>
+                <small>Vos données bancaires ne transitent jamais par nos serveurs</small>
+            </div>
         </div>
 
-        <!-- Bouton vers Stripe Payment Link -->
-        <a href="{{ payment_url }}" target="_blank" class="pay-button">
-            💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
-        </a>
+        <!-- ÉTAPE 2 : Après avoir cliqué sur Payer -->
+        <div id="step2">
+            <div class="waiting-message">
+                <h4>💳 Paiement en cours...</h4>
+                <p>Une fois votre paiement effectué sur Stripe, cliquez sur le bouton ci-dessous.</p>
+            </div>
 
-        <!-- Formulaire de confirmation après paiement -->
-        <form action="{{ url_for('paiement_confirmer') }}" method="POST">
-            <button type="submit" class="confirm-button">
-                ✅ J'ai payé - Recevoir les coordonnées
-            </button>
-        </form>
-        
-        <div class="security-badge">
-            🔒 Paiement 100% sécurisé par Stripe
-            <br>
-            <small>Vos données bancaires ne transitent jamais par nos serveurs</small>
+            <form action="{{ url_for('paiement_confirmer') }}" method="POST">
+                <button type="submit" class="confirm-button">
+                    ✅ J'ai payé - Recevoir les coordonnées
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
+                <a href="{{ payment_url }}" target="_blank" style="color: #3fb0ac;">
+                    🔄 Rouvrir la page de paiement Stripe
+                </a>
+            </p>
         </div>
 
         <a href="{{ url_for('choix_nageur') }}" class="back-link">← Modifier ma sélection</a>
     </div>
+
+    <script>
+        function showStep2() {
+            // Afficher l'étape 2 après 2 secondes (temps d'ouvrir Stripe)
+            setTimeout(function() {
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+            }, 2000);
+        }
+    </script>
 </body>
 </html>

@@ -893,9 +893,9 @@ def confirmation_paiement():
     )
 
 
-@app.route("/paiement/confirmer", methods=["POST"])
+@app.route("/paiement/confirmer", methods=["GET", "POST"])
 def paiement_confirmer():
-    """Confirmer le paiement après retour de Stripe (via bouton manuel)"""
+    """Confirmer le paiement après retour de Stripe"""
     if "nageur_ids" not in session or "client_id" not in session:
         flash("Session expirée. Veuillez recommencer.", "danger")
         return redirect(url_for("index"))

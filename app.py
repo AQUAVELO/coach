@@ -37,6 +37,13 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 # Configuration Stripe Payment Link
 STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03')
 
+# Configuration Stripe Checkout (recommandé: montant contrôlé côté serveur)
+# IMPORTANT: ne jamais mettre la clé dans le code. Définissez-la dans .htaccess:
+# SetEnv STRIPE_SECRET_KEY "sk_live_..." (ou sk_test_... en mode test)
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD_HASH = generate_password_hash("admin123")  # Mot de passe: admin123
@@ -209,6 +216,9 @@ def send_confirmation_email(
               <p><strong>Code de validation :</strong> <span style="font-size:1.5em;color:#cc3366;">{code_validation}</span></p>
             </div>
             <p>Contactez votre maître-nageur pour planifier vos séances.</p>
+            <p style="font-size: 0.9em; color: #666; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                <em>Note : La mise en relation est effective. Merci de vérifier que le PSE1 du prestataire est à jour de sa formation continue annuelle pour la saison en cours.</em>
+            </p>
             <p>À très bientôt dans l'eau ! 🏊‍♂️</p>
             <p>L'équipe AquaCoach</p>
         </body>
@@ -861,13 +871,14 @@ def choix_nageur():
 
 @app.route("/confirmation_paiement")
 def confirmation_paiement():
-    """Page de confirmation avant paiement via Payment Link"""
+    """Page de confirmation avant paiement via multi-liens Stripe"""
     if "nageur_ids" not in session or "client_id" not in session:
         return redirect(url_for("index"))
 
     # Récupérer tous les nageurs sélectionnés
     nageur_ids = session["nageur_ids"]
-    placeholders = ','.join(['?'] * len(nageur_ids))
+    nombre = len(nageur_ids)
+    placeholders = ','.join(['?'] * nombre)
     nageurs = query_db(f"SELECT * FROM nageur WHERE id IN ({placeholders})", nageur_ids)
     
     client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
@@ -876,18 +887,27 @@ def confirmation_paiement():
         flash("Erreur lors de la récupération des informations", "danger")
         return redirect(url_for("index"))
 
-    total = len(nageurs) * 2.00  # 2€ par nageur
+    # Dictionnaire des 5 liens directs (un par quantité)
+    liens_stripe = {
+        1: "https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03",
+        2: "https://buy.stripe.com/8x214o2rZgcY3jEesle7m04",
+        3: "https://buy.stripe.com/bJe4gAeaH7Gs1bwac5e7m05",
+        4: "https://buy.stripe.com/4gM14o5Eb8Kw1bw5VPe7m06",
+        5: "https://buy.stripe.com/8x200k3w39OA3jE2JDe7m07"
+    }
+
+    # Récupérer le lien correspondant au nombre (par défaut le lien 1 si > 5)
+    base_url = liens_stripe.get(nombre, liens_stripe[1])
     
-    # GÉNÉRATION DU LIEN DYNAMIQUE
-    # On ajoute ?quantity=X et client_reference_id à la fin du lien Stripe
-    stripe_link = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&client_reference_id={session['client_id']}&prefilled_email={client['email']}"
+    # On ajoute client_reference_id et prefilled_email pour le suivi
+    stripe_link = f"{base_url}?client_reference_id={session['client_id']}&prefilled_email={client['email']}"
 
     return render_template(
         "confirmation_paiement.html",
         nageurs=nageurs,
-        total=total,
-        count=len(nageurs),
-        stripe_link=stripe_link,
+        total=nombre * 2.00,
+        count=nombre,
+        stripe_link=stripe_link
     )
 
 

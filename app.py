@@ -19,6 +19,7 @@ from functools import wraps
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import stripe
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
@@ -34,10 +35,7 @@ UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 # Configuration Stripe Payment Link
-# Créez votre Payment Link dans le Dashboard Stripe et collez l'URL ici
-# TEST : https://buy.stripe.com/test_xxxxx
-# PRODUCTION : https://buy.stripe.com/xxxxx
-STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/5kQaEYd6D6Co3jE2JDe7m01')
+STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03')
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -881,24 +879,23 @@ def confirmation_paiement():
     total = len(nageurs) * 2.00  # 2€ par nageur
     
     # GÉNÉRATION DU LIEN DYNAMIQUE
-    # On ajoute ?quantity=X et les autres paramètres à la fin du lien Stripe
-    stripe_link = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&prefilled_email={client['email']}&client_reference_id={session['client_id']}"
+    # On ajoute ?quantity=X et client_reference_id à la fin du lien Stripe
+    stripe_link = f"{STRIPE_PAYMENT_LINK}?quantity={len(nageurs)}&client_reference_id={session['client_id']}&prefilled_email={client['email']}"
 
     return render_template(
         "confirmation_paiement.html",
         nageurs=nageurs,
         total=total,
         count=len(nageurs),
-        client_email=client["email"],
         stripe_link=stripe_link,
     )
 
 
-@app.route("/paiement/confirmer", methods=["GET", "POST"])
-def paiement_confirmer():
-    """Confirmer le paiement après retour de Stripe"""
+@app.route("/paiement_valide")
+def paiement_valide():
+    """Route de succès automatique après paiement Stripe"""
     if "nageur_ids" not in session or "client_id" not in session:
-        flash("Session expirée. Veuillez recommencer.", "danger")
+        flash("Session expirée. Vos sélections ont peut-être déjà été traitées.", "info")
         return redirect(url_for("index"))
 
     nageur_ids = session["nageur_ids"]
@@ -907,20 +904,16 @@ def paiement_confirmer():
     client = query_db("SELECT * FROM client WHERE id = ?", (session["client_id"],), one=True)
 
     if not nageurs or not client:
-        flash("Erreur lors de la récupération des informations", "danger")
         return redirect(url_for("index"))
 
-    # Enregistrer les sélections
+    # 1. Enregistrer les sélections en base de données
     for nageur_id in nageur_ids:
         execute_db(
-            """
-            INSERT INTO selection (client_id, nageur_id, date_selection)
-            VALUES (?, ?, ?)
-        """,
+            "INSERT INTO selection (client_id, nageur_id, date_selection) VALUES (?, ?, ?)",
             (session["client_id"], nageur_id, datetime.now()),
         )
 
-    # Envoyer les emails
+    # 2. Envoyer les emails de mise en relation
     for nageur in nageurs:
         send_confirmation_email(
             client_email=client["email"],
@@ -937,7 +930,7 @@ def paiement_confirmer():
     total = len(nageurs) * 2.00
     code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
-    # Nettoyer la session
+    # 3. Nettoyer la session
     session.pop("nageur_ids", None)
     session.pop("client_id", None)
     session.pop("client_dept", None)

@@ -869,6 +869,27 @@ def choix_nageur():
     return render_template("choix_nageur.html", nageurs=nageurs, dept=session["client_dept"])
 
 
+# Configuration Stripe (TEST ou PRODUCTION)
+STRIPE_TEST_MODE = True  # Mettez à False pour passer en production réellle
+
+# Liens de PRODUCTION
+LIENS_PROD = {
+    1: "https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03",
+    2: "https://buy.stripe.com/8x214o2rZgcY3jEesle7m04",
+    3: "https://buy.stripe.com/bJe4gAeaH7Gs1bwac5e7m05",
+    4: "https://buy.stripe.com/4gM14o5Eb8Kw1bw5VPe7m06",
+    5: "https://buy.stripe.com/8x200k3w39OA3jE2JDe7m07"
+}
+
+# Liens de TEST (Remplacez par vos liens test_... créés dans Stripe)
+LIENS_TEST = {
+    1: "https://buy.stripe.com/test_3cIaEX3WZ9v3flofwNc3m00", # Exemple de lien test
+    2: "https://buy.stripe.com/test_xxx2",
+    3: "https://buy.stripe.com/test_xxx3",
+    4: "https://buy.stripe.com/test_xxx4",
+    5: "https://buy.stripe.com/test_xxx5"
+}
+
 @app.route("/confirmation_paiement")
 def confirmation_paiement():
     """Page de confirmation avant paiement via multi-liens Stripe"""
@@ -887,17 +908,11 @@ def confirmation_paiement():
         flash("Erreur lors de la récupération des informations", "danger")
         return redirect(url_for("index"))
 
-    # Dictionnaire des 5 liens directs (un par quantité)
-    liens_stripe = {
-        1: "https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03",
-        2: "https://buy.stripe.com/8x214o2rZgcY3jEesle7m04",
-        3: "https://buy.stripe.com/bJe4gAeaH7Gs1bwac5e7m05",
-        4: "https://buy.stripe.com/4gM14o5Eb8Kw1bw5VPe7m06",
-        5: "https://buy.stripe.com/8x200k3w39OA3jE2JDe7m07"
-    }
-
-    # Récupérer le lien correspondant au nombre (par défaut le lien 1 si > 5)
-    base_url = liens_stripe.get(nombre, liens_stripe[1])
+    # Choisir le dictionnaire selon le mode
+    liens = LIENS_TEST if STRIPE_TEST_MODE else LIENS_PROD
+    
+    # Récupérer le lien correspondant au nombre
+    base_url = liens.get(nombre, liens[1])
     
     # On ajoute client_reference_id et prefilled_email pour le suivi
     stripe_link = f"{base_url}?client_reference_id={session['client_id']}&prefilled_email={client['email']}"
@@ -907,7 +922,8 @@ def confirmation_paiement():
         nageurs=nageurs,
         total=nombre * 2.00,
         count=nombre,
-        stripe_link=stripe_link
+        stripe_link=stripe_link,
+        test_mode=STRIPE_TEST_MODE
     )
 
 

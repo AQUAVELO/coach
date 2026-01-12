@@ -128,6 +128,12 @@
             <div class="price-subtitle">{{ count }} maître-nageur{{ 's' if count > 1 else '' }} × 2,00 €</div>
         </div>
 
+        {% if test_mode %}
+        <div style="background: #ffeb3b; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold; color: #333;">
+            ⚠️ MODE TEST ACTIVÉ
+        </div>
+        {% endif %}
+        
         <a href="{{ stripe_link }}" class="pay-button">
             💳 Payer {{ "%.2f"|format(total) }} € sur Stripe
         </a>

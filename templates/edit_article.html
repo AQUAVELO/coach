@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Modifier' if article else 'Nouvel' }} Article | Administration AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        .edit-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 300px;
+        }
+        .image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .btn-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+    </style>
+</head>
+<body style="background: #f4f7f6;">
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH ADMIN</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('admin_index') }}" class="nav-link">Tableau de bord</a>
+                <a href="{{ url_for('admin_blog') }}" class="nav-link" style="color: var(--primary-color);">Blog</a>
+                <a href="{{ url_for('admin_logout') }}" class="nav-link">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div style="margin-bottom: 1.5rem;">
+            <a href="{{ url_for('admin_blog') }}" style="color: var(--primary-color); text-decoration: none;">← Retour à la liste</a>
+        </div>
+
+        <div class="edit-card">
+            <h1 style="margin-top: 0; margin-bottom: 2rem;">{{ '✍️ Modifier l\'article' if article else '🆕 Créer un article' }}</h1>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="titre">Titre de l'article</label>
+                    <input type="text" id="titre" name="titre" class="form-input" value="{{ article.titre if article else '' }}" required placeholder="Ex: 5 conseils pour apprendre à nager aux enfants">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="resume">Résumé (apparaît sur la liste)</label>
+                    <textarea id="resume" name="resume" class="form-input" rows="3" placeholder="Un court texte qui donne envie de lire l'article...">{{ article.resume if article else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="image">Image de couverture</label>
+                    <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                    {% if article and article.image %}
+                        <img src="{{ url_for('static', filename='images/' + article.image) }}" class="image-preview">
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="contenu">Contenu de l'article</label>
+                    <div class="help-text">Vous pouvez utiliser des balises HTML comme &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt; pour formater votre texte.</div>
+                    <textarea id="contenu" name="contenu" class="form-textarea" required>{{ article.contenu if article else '' }}</textarea>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="is_published" name="is_published" {{ 'checked' if not article or article.is_published else '' }}>
+                    <label for="is_published" style="font-weight: 600;">Publier cet article immédiatement</label>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn-primary-custom" style="flex: 2;">Enregistrer l'article</button>
+                    <a href="{{ url_for('admin_blog') }}" class="btn-outline-custom" style="flex: 1; text-align: center; text-decoration: none;">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1426,6 +1426,108 @@ def mon_profil():
     return render_template("mon_profil.html", nageur=nageur, departements=DEPARTEMENTS)
 
 
+import re
+import unicodedata
+
+def slugify(value):
+    """
+    Convertit une chaîne en slug (ex: "Mon Article !" -> "mon-article")
+    """
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+    return re.sub(r'[-\s]+', '-', value)
+
+# ============================================
+# BLOG ADMIN ROUTES
+# ============================================
+
+@app.route("/admin/blog")
+@login_required
+def admin_blog():
+    """Liste tous les articles côté admin"""
+    articles = query_db("SELECT * FROM article ORDER BY date_publication DESC")
+    return render_template("admin_blog.html", articles=articles)
+
+@app.route("/admin/blog/new", methods=["GET", "POST"])
+@login_required
+def admin_blog_new():
+    """Créer un nouvel article"""
+    if request.method == "POST":
+        titre = request.form.get("titre")
+        resume = request.form.get("resume")
+        contenu = request.form.get("contenu")
+        is_published = 1 if request.form.get("is_published") else 0
+        
+        slug = slugify(titre)
+        
+        # Vérifier si le slug existe déjà
+        existing = query_db("SELECT id FROM article WHERE slug = ?", (slug,), one=True)
+        if existing:
+            slug = f"{slug}-{secrets.token_hex(4)}"
+            
+        image = None
+        if "image" in request.files:
+            file = request.files["image"]
+            if file and file.filename:
+                filename = f"blog_{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                image = filename
+        
+        execute_db(
+            "INSERT INTO article (titre, slug, resume, contenu, image, is_published) VALUES (?, ?, ?, ?, ?, ?)",
+            (titre, slug, resume, contenu, image, is_published)
+        )
+        
+        flash("Article créé avec succès !", "success")
+        return redirect(url_for("admin_blog"))
+        
+    return render_template("edit_article.html", article=None)
+
+@app.route("/admin/blog/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_blog_edit(id):
+    """Modifier un article"""
+    article = query_db("SELECT * FROM article WHERE id = ?", (id,), one=True)
+    if not article:
+        flash("Article introuvable", "danger")
+        return redirect(url_for("admin_blog"))
+        
+    if request.method == "POST":
+        titre = request.form.get("titre")
+        resume = request.form.get("resume")
+        contenu = request.form.get("contenu")
+        is_published = 1 if request.form.get("is_published") else 0
+        
+        # Gestion de l'image
+        image = article['image']
+        if "image" in request.files:
+            file = request.files["image"]
+            if file and file.filename:
+                filename = f"blog_{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                image = filename
+        
+        # On ne change pas le slug pour ne pas casser le SEO des anciens articles
+        execute_db(
+            "UPDATE article SET titre = ?, resume = ?, contenu = ?, image = ?, is_published = ? WHERE id = ?",
+            (titre, resume, contenu, image, is_published, id)
+        )
+        
+        flash("Article mis à jour !", "success")
+        return redirect(url_for("admin_blog"))
+        
+    return render_template("edit_article.html", article=article)
+
+@app.route("/admin/blog/delete/<int:id>", methods=["POST"])
+@login_required
+def admin_blog_delete(id):
+    """Supprimer un article"""
+    execute_db("DELETE FROM article WHERE id = ?", (id,))
+    flash("Article supprimé !", "success")
+    return redirect(url_for("admin_blog"))
+
 # ============================================
 # ADMIN AUTHENTICATION ROUTES
 # ============================================

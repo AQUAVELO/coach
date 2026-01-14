@@ -92,7 +92,7 @@
                     <label class="form-label" for="image">Image de couverture</label>
                     <input type="file" id="image" name="image" class="form-input" accept="image/*">
                     {% if article and article.image %}
-                        <img src="{{ url_for('static', filename='images/' + article.image) }}" class="image-preview">
+                        <img src="{{ url_for('static', filename='uploads/' + article.image) }}" class="image-preview">
                     {% endif %}
                 </div>
 

@@ -102,7 +102,7 @@
                 <h1 style="font-size: 2.5rem; color: var(--text-dark); margin-bottom: 2rem; line-height: 1.2;">{{ article.titre }}</h1>
                 
                 {% if article.image %}
-                <div class="article-header-image" style="background-image: url('{{ url_for('static', filename='images/' + article.image) }}')"></div>
+                <div class="article-header-image" style="background-image: url('{{ url_for('static', filename='uploads/' + article.image) }}')"></div>
                 {% endif %}
                 
                 <div class="article-full-content">

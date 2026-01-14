@@ -93,7 +93,7 @@
                 <div class="blog-grid">
                     {% for article in articles %}
                         <article class="article-card">
-                            <div class="article-image" style="background-image: url('{{ url_for('static', filename='images/' + (article.image if article.image else 'default-blog.jpg')) }}')"></div>
+                            <div class="article-image" style="background-image: url('{{ url_for('static', filename='uploads/' + article.image) if article.image else url_for('static', filename='images/default-swimmer.svg') }}')"></div>
                             <div class="article-content">
                                 <div class="article-meta">{{ article.date_publication.strftime('%d %B %Y') if article.date_publication is string == False else article.date_publication[:10] }}</div>
                                 <h2 class="article-title">{{ article.titre }}</h2>

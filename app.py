@@ -444,6 +444,11 @@ L'équipe AquaCoach
             </div>
             
             <p style="margin-top: 20px;">
+                <a href="https://aquacoach.fr/admin/login" style="display: inline-block; background-color: #3fb0ac; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Accéder à l'interface Admin
+                </a>
+            </p>
+            <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
                 Vérifiez le profil dans l'interface admin si nécessaire.
             </p>
         </body>

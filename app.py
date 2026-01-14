@@ -917,7 +917,7 @@ def choix_nageur():
 
 
 # Configuration Stripe (TEST ou PRODUCTION)
-STRIPE_TEST_MODE = True  # Mettez à False pour passer en production réellle
+STRIPE_TEST_MODE = False  # Mettez à False pour passer en production réellle
 
 # Liens de PRODUCTION
 LIENS_PROD = {

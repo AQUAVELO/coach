@@ -699,6 +699,7 @@ def execute_db(query, args=()):
 
 
 def init_db():
+    print("🛠️ Initialisation de la base de données...")
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -766,15 +767,19 @@ def init_db():
                 # Migration : Ajouter les nouvelles colonnes si elles n'existent pas
                 try:
                     cursor.execute("SELECT carte_pro_photo FROM nageur LIMIT 1")
-                except:
-                    print("🚀 Migration : Ajout de la colonne carte_pro_photo")
-                    cursor.execute("ALTER TABLE nageur ADD COLUMN carte_pro_photo TEXT")
+                except Exception as e:
+                    db.rollback() 
+                    print(f"🚀 Migration : Ajout de la colonne carte_pro_photo")
+                    with db.cursor() as alt_cursor:
+                        alt_cursor.execute("ALTER TABLE nageur ADD COLUMN carte_pro_photo TEXT")
                 
                 try:
                     cursor.execute("SELECT is_active FROM nageur LIMIT 1")
-                except:
-                    print("🚀 Migration : Ajout de la colonne is_active")
-                    cursor.execute("ALTER TABLE nageur ADD COLUMN is_active INTEGER DEFAULT 1")
+                except Exception as e:
+                    db.rollback()
+                    print(f"🚀 Migration : Ajout de la colonne is_active")
+                    with db.cursor() as alt_cursor:
+                        alt_cursor.execute("ALTER TABLE nageur ADD COLUMN is_active INTEGER DEFAULT 1")
         else:
             for q in queries:
                 db.execute(q)
@@ -796,6 +801,8 @@ def init_db():
         print("✅ Base de données initialisée et migrée")
     except Exception as e:
         print(f"⚠️ Erreur initialisation BDD: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
         db.close()
 
@@ -1615,8 +1622,11 @@ def delete_nageur(id):
 # INITIALISATION
 # ============================================
 
-if __name__ == "__main__":
+# Initialiser la base de données au démarrage (nécessaire pour Passenger sur o2switch)
+with app.app_context():
     init_db()
+
+if __name__ == "__main__":
     print("🌊 AquaCoach est prêt!")
     print("🌐 Ouvrez votre navigateur à: http://localhost:8080")
     app.run(host="0.0.0.0", port=8080, debug=True)

@@ -727,6 +727,8 @@ def init_db():
             sexe TEXT,
             login VARCHAR(100) UNIQUE,
             password_hash TEXT,
+            carte_pro_photo TEXT,
+            is_active INTEGER DEFAULT 1,
             date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """,
@@ -757,13 +759,41 @@ def init_db():
     try:
         if DB_HOST:
             with db.cursor() as cursor:
+                # Créer les tables si elles n'existent pas
                 for q in queries:
                     cursor.execute(q)
+                
+                # Migration : Ajouter les nouvelles colonnes si elles n'existent pas
+                try:
+                    cursor.execute("SELECT carte_pro_photo FROM nageur LIMIT 1")
+                except:
+                    print("🚀 Migration : Ajout de la colonne carte_pro_photo")
+                    cursor.execute("ALTER TABLE nageur ADD COLUMN carte_pro_photo TEXT")
+                
+                try:
+                    cursor.execute("SELECT is_active FROM nageur LIMIT 1")
+                except:
+                    print("🚀 Migration : Ajout de la colonne is_active")
+                    cursor.execute("ALTER TABLE nageur ADD COLUMN is_active INTEGER DEFAULT 1")
         else:
             for q in queries:
                 db.execute(q)
+            
+            # Migration SQLite
+            try:
+                db.execute("SELECT carte_pro_photo FROM nageur LIMIT 1")
+            except sqlite3.OperationalError:
+                print("🚀 Migration SQLite : Ajout de la colonne carte_pro_photo")
+                db.execute("ALTER TABLE nageur ADD COLUMN carte_pro_photo TEXT")
+            
+            try:
+                db.execute("SELECT is_active FROM nageur LIMIT 1")
+            except sqlite3.OperationalError:
+                print("🚀 Migration SQLite : Ajout de la colonne is_active")
+                db.execute("ALTER TABLE nageur ADD COLUMN is_active INTEGER DEFAULT 1")
+            
             db.commit()
-        print("✅ Base de données initialisée")
+        print("✅ Base de données initialisée et migrée")
     except Exception as e:
         print(f"⚠️ Erreur initialisation BDD: {e}")
     finally:
@@ -777,8 +807,8 @@ def init_db():
 
 @app.route("/")
 def index():
-    # Récupérer les derniers nageurs et clients pour la page d'accueil
-    nageurs = query_db("SELECT * FROM nageur ORDER BY date_inscription DESC LIMIT 6")
+    # Récupérer les derniers nageurs actifs et clients pour la page d'accueil
+    nageurs = query_db("SELECT * FROM nageur WHERE is_active = 1 ORDER BY date_inscription DESC LIMIT 6")
     clients = query_db("SELECT * FROM client ORDER BY date_inscription DESC LIMIT 3")
     return render_template("index.html", nageurs=nageurs, clients=clients)
 
@@ -864,7 +894,7 @@ def choix_nageur():
     if "client_dept" not in session:
         return redirect(url_for("inscription_client"))
 
-    nageurs = query_db("SELECT * FROM nageur WHERE dept = ?", (session["client_dept"],))
+    nageurs = query_db("SELECT * FROM nageur WHERE dept = ? AND is_active = 1", (session["client_dept"],))
 
     return render_template("choix_nageur.html", nageurs=nageurs, dept=session["client_dept"])
 
@@ -1138,10 +1168,19 @@ def submit_inscription_nageur():
             file.save(filepath)
             photo = filename
 
+    carte_pro_photo = None
+    if "carte_pro_photo" in request.files:
+        file = request.files["carte_pro_photo"]
+        if file and file.filename:
+            filename = f"carte_pro_{secrets.token_hex(8)}_{file.filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(filepath)
+            carte_pro_photo = filename
+
     nageur_id = execute_db(
         """
-        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash, carte_pro_photo, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             nom,
@@ -1158,7 +1197,9 @@ def submit_inscription_nageur():
             photo,
             preferences,
             login,
-            password_hash
+            password_hash,
+            carte_pro_photo,
+            1  # Actif par défaut
         ),
     )
 
@@ -1274,7 +1315,7 @@ def mon_profil():
         tarif = request.form.get("tarif")
         preferences = request.form.get("preferences")
 
-        # Gestion de la photo
+        # Gestion de la photo de profil
         photo_sql = ""
         params = [nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, preferences]
 
@@ -1297,13 +1338,34 @@ def mon_profil():
                 photo_sql = ", photo = ?"
                 params.append(filename)
 
+        # Gestion de la carte professionnelle
+        carte_sql = ""
+        if "carte_pro_photo" in request.files:
+            file = request.files["carte_pro_photo"]
+            if file and file.filename:
+                # Supprimer l'ancienne carte si elle existe
+                old_carte = query_db("SELECT carte_pro_photo FROM nageur WHERE id = ?", (nageur_id,), one=True)
+                if old_carte and old_carte["carte_pro_photo"]:
+                    old_path = os.path.join(UPLOAD_FOLDER, old_carte["carte_pro_photo"])
+                    if os.path.exists(old_path):
+                        try:
+                            os.remove(old_path)
+                        except:
+                            pass
+
+                filename = f"carte_pro_{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                carte_sql = ", carte_pro_photo = ?"
+                params.append(filename)
+
         params.append(nageur_id)
 
         execute_db(
             f"""
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?, 
-                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, preferences = ? {photo_sql}
+                diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, preferences = ? {photo_sql} {carte_sql}
             WHERE id = ?
         """,
             tuple(params),
@@ -1452,54 +1514,69 @@ def edit_nageur(id):
         preferences = request.form.get('preferences')
         login = request.form.get('login')
         password = request.form.get('password')
+        is_active = request.form.get('is_active') == '1'
         
-        # Récupérer la photo actuelle
-        nageur = query_db('SELECT photo FROM nageur WHERE id = ?', (id,), one=True)
+        # Récupérer les données actuelles
+        nageur = query_db('SELECT photo, carte_pro_photo FROM nageur WHERE id = ?', (id,), one=True)
         current_photo = nageur['photo'] if nageur else None
+        current_carte = nageur['carte_pro_photo'] if nageur else None
+        
         new_photo = current_photo
+        new_carte = current_carte
         
         # Gestion de la suppression de photo
         if request.form.get('delete_photo') == '1':
             if current_photo:
-                # Supprimer l'ancien fichier
                 old_path = os.path.join(UPLOAD_FOLDER, current_photo)
                 if os.path.exists(old_path):
                     os.remove(old_path)
-                    print(f"🗑️ Photo supprimée : {current_photo}")
             new_photo = None
         
-        # Gestion de l'upload d'une nouvelle photo
+        # Gestion de la suppression de la carte pro
+        if request.form.get('delete_carte') == '1':
+            if current_carte:
+                old_path = os.path.join(UPLOAD_FOLDER, current_carte)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            new_carte = None
+        
+        # Upload photo
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename:
-                # Supprimer l'ancienne photo si elle existe
                 if current_photo and not request.form.get('delete_photo'):
                     old_path = os.path.join(UPLOAD_FOLDER, current_photo)
                     if os.path.exists(old_path):
                         os.remove(old_path)
-                        print(f"🗑️ Ancienne photo remplacée : {current_photo}")
-                
-                # Sauvegarder la nouvelle photo
                 filename = f"{secrets.token_hex(8)}_{file.filename}"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(filepath)
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
                 new_photo = filename
-                print(f"📸 Nouvelle photo uploadée : {filename}")
+        
+        # Upload carte pro
+        if 'carte_pro_photo' in request.files:
+            file = request.files['carte_pro_photo']
+            if file and file.filename:
+                if current_carte and not request.form.get('delete_carte'):
+                    old_path = os.path.join(UPLOAD_FOLDER, current_carte)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                filename = f"carte_pro_{secrets.token_hex(8)}_{file.filename}"
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                new_carte = filename
         
         # SQL et paramètres de base
         sql = '''
             UPDATE nageur 
             SET nom = ?, prenom = ?, email = ?, tel = ?, ville = ?, dept = ?, sexe = ?,
                 diplome = ?, presentation = ?, disponibilites = ?, tarif = ?, photo = ?, preferences = ?,
-                login = ?
+                login = ?, carte_pro_photo = ?, is_active = ?
         '''
-        params = [nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, new_photo, preferences, login]
+        params = [nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, new_photo, preferences, login, new_carte, 1 if is_active else 0]
 
         # Si un nouveau mot de passe est saisi, on le hache
         if password and password.strip():
             sql += ", password_hash = ?"
             params.append(generate_password_hash(password))
-            print(f"🔐 Mot de passe mis à jour pour {login}")
 
         sql += " WHERE id = ?"
         params.append(id)

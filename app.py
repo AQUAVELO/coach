@@ -688,12 +688,17 @@ def execute_db(query, args=()):
         if DB_HOST:
             with db.cursor() as cursor:
                 cursor.execute(query, args)
+                db.commit()  # IMPORTANT: Commit pour MySQL
                 last_id = cursor.lastrowid
         else:
             cur = db.execute(query, args)
             db.commit()
             last_id = cur.lastrowid
         return last_id
+    except Exception as e:
+        if DB_HOST:
+            db.rollback()
+        raise e
     finally:
         db.close()
 
@@ -1142,102 +1147,113 @@ def inscription_nageur():
 
 @app.route("/submit_inscription_nageur", methods=["POST"])
 def submit_inscription_nageur():
-    nom = request.form.get("nom")
-    prenom = request.form.get("prenom")
-    email = request.form.get("email")
-    tel = request.form.get("tel")
-    ville = request.form.get("ville")
-    dept = request.form.get("dept")
-    sexe = request.form.get("sexe")
-    diplome = request.form.get("diplome")
-    presentation = request.form.get("presentation")
-    disponibilites = request.form.get("disponibilites")
-    tarif = request.form.get("tarif")
-    preferences = request.form.get("preferences")
-    login = request.form.get("login")
-    password = request.form.get("password")
+    try:
+        nom = request.form.get("nom")
+        prenom = request.form.get("prenom")
+        email = request.form.get("email")
+        tel = request.form.get("tel")
+        ville = request.form.get("ville")
+        dept = request.form.get("dept")
+        sexe = request.form.get("sexe")
+        diplome = request.form.get("diplome")
+        presentation = request.form.get("presentation")
+        disponibilites = request.form.get("disponibilites")
+        tarif = request.form.get("tarif")
+        preferences = request.form.get("preferences")
+        login = request.form.get("login")
+        password = request.form.get("password")
 
-    # Vérifier si le login existe déjà
-    if login:
-        existing = query_db("SELECT id FROM nageur WHERE login = ?", (login,), one=True)
-        if existing:
-            flash("Cet identifiant est déjà utilisé. Veuillez en choisir un autre.", "danger")
-            return redirect(url_for("inscription_nageur"))
+        # Vérifier si le login existe déjà
+        if login:
+            existing = query_db("SELECT id FROM nageur WHERE login = ?", (login,), one=True)
+            if existing:
+                flash("Cet identifiant est déjà utilisé. Veuillez en choisir un autre.", "danger")
+                return redirect(url_for("inscription_nageur"))
 
-    password_hash = generate_password_hash(password) if password else None
+        password_hash = generate_password_hash(password) if password else None
 
-    photo = None
-    if "photo" in request.files:
-        file = request.files["photo"]
-        if file and file.filename:
-            filename = f"{secrets.token_hex(8)}_{file.filename}"
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
-            photo = filename
+        photo = None
+        if "photo" in request.files:
+            file = request.files["photo"]
+            if file and file.filename:
+                filename = f"{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                photo = filename
 
-    carte_pro_photo = None
-    if "carte_pro_photo" in request.files:
-        file = request.files["carte_pro_photo"]
-        if file and file.filename:
-            filename = f"carte_pro_{secrets.token_hex(8)}_{file.filename}"
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(filepath)
-            carte_pro_photo = filename
+        carte_pro_photo = None
+        if "carte_pro_photo" in request.files:
+            file = request.files["carte_pro_photo"]
+            if file and file.filename:
+                filename = f"carte_pro_{secrets.token_hex(8)}_{file.filename}"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(filepath)
+                carte_pro_photo = filename
 
-    nageur_id = execute_db(
-        """
-        INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash, carte_pro_photo, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """,
-        (
-            nom,
-            prenom,
-            email,
-            tel,
-            ville,
-            dept,
-            sexe,
-            diplome,
-            presentation,
-            disponibilites,
-            tarif,
-            photo,
-            preferences,
-            login,
-            password_hash,
-            carte_pro_photo,
-            1  # Actif par défaut
-        ),
-    )
+        nageur_id = execute_db(
+            """
+            INSERT INTO nageur (nom, prenom, email, tel, ville, dept, sexe, diplome, presentation, disponibilites, tarif, photo, preferences, login, password_hash, carte_pro_photo, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                nom,
+                prenom,
+                email,
+                tel,
+                ville,
+                dept,
+                sexe,
+                diplome,
+                presentation,
+                disponibilites,
+                tarif,
+                photo,
+                preferences,
+                login,
+                password_hash,
+                carte_pro_photo,
+                1  # Actif par défaut
+            ),
+        )
 
-    # Connexion automatique après inscription
-    session["nageur_id"] = nageur_id
-    session["nageur_nom"] = f"{prenom} {nom}"
+        # Connexion automatique après inscription
+        session["nageur_id"] = nageur_id
+        session["nageur_nom"] = f"{prenom} {nom}"
 
-    # Envoi des emails de confirmation
-    send_nageur_inscription_email(
-        nageur_prenom=prenom,
-        nageur_nom=nom,
-        nageur_email=email,
-        nageur_tel=tel,
-        nageur_ville=ville,
-        nageur_dept=dept,
-        nageur_diplome=diplome,
-        nageur_tarif=tarif
-    )
+        # Envoi des emails de confirmation
+        try:
+            send_nageur_inscription_email(
+                nageur_prenom=prenom,
+                nageur_nom=nom,
+                nageur_email=email,
+                nageur_tel=tel,
+                nageur_ville=ville,
+                nageur_dept=dept,
+                nageur_diplome=diplome,
+                nageur_tarif=tarif
+            )
+        except Exception as e:
+            print(f"⚠️ Erreur envoi email inscription: {e}")
+
+        # Redirection vers la page de succès
+        return redirect(url_for("remerciements_nageur", nageur_id=nageur_id))
+
+    except Exception as e:
+        print(f"❌ Erreur lors de l'inscription nageur: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f"Une erreur est survenue lors de l'inscription : {str(e)}", "danger")
+        return redirect(url_for("inscription_nageur"))
+
+
+@app.route("/remerciements_nageur/<int:nageur_id>")
+def remerciements_nageur(nageur_id):
+    """Page de confirmation après inscription réussie"""
+    nageur = query_db("SELECT * FROM nageur WHERE id = ?", (nageur_id,), one=True)
+    if not nageur:
+        return redirect(url_for("index"))
     
-    # Redirection vers la page de confirmation avec les infos du nageur
-    return render_template("confirmation_inscription_nageur.html", nageur={
-        'id': nageur_id,
-        'nom': nom,
-        'prenom': prenom,
-        'email': email,
-        'tel': tel,
-        'ville': ville,
-        'dept': dept,
-        'diplome': diplome,
-        'tarif': tarif
-    })
+    return render_template("confirmation_inscription_nageur.html", nageur=nageur)
 
 
 # ============================================

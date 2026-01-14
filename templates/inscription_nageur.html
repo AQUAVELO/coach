@@ -39,6 +39,16 @@
                 Rejoignez notre réseau de professionnels certifiés
             </p>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div style="background: {% if category == 'danger' %}#f8d7da; border: 1px solid #f5c6cb; color: #721c24;{% elif category == 'warning' %}#fff3cd; border: 1px solid #ffeeba; color: #856404;{% else %}#d4edda; border: 1px solid #c3e6cb; color: #155724;{% endif %} padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
             {% if message %}
                 <div style="background: {% if 'erreur' in message.lower() or 'invalide' in message.lower() %}#f8d7da; border: 1px solid #f5c6cb; color: #721c24;{% else %}#d4edda; border: 1px solid #c3e6cb; color: #155724;{% endif %} padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: center;">
                     {{ message }}

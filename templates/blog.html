@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog AquaCoach | Conseils Natation et Bien-être</title>
+    <meta name="description" content="Découvrez nos articles et conseils sur la natation, le bien-être et comment progresser avec nos maîtres-nageurs certifiés.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .article-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .article-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-color: #f0f0f0;
+        }
+        .article-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+        .article-title {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .article-excerpt {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .article-meta {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 1rem;
+        }
+        .btn-read-more {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-read-more:after {
+            content: ' →';
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('blog_index') }}" class="nav-link" style="color: var(--primary-color);">Blog</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); padding: 4rem 0;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; text-align: center; color: white;">
+            <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1rem;">🌊 Le Blog AquaCoach</h1>
+            <p style="font-size: 1.2rem; opacity: 0.9;">Conseils, astuces et actualités sur la natation et le bien-être</p>
+        </div>
+    </div>
+
+    <!-- Blog Content -->
+    <section class="section">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            {% if articles %}
+                <div class="blog-grid">
+                    {% for article in articles %}
+                        <article class="article-card">
+                            <div class="article-image" style="background-image: url('{{ url_for('static', filename='images/' + (article.image if article.image else 'default-blog.jpg')) }}')"></div>
+                            <div class="article-content">
+                                <div class="article-meta">{{ article.date_publication.strftime('%d %B %Y') if article.date_publication is string == False else article.date_publication[:10] }}</div>
+                                <h2 class="article-title">{{ article.titre }}</h2>
+                                <p class="article-excerpt">{{ article.resume }}</p>
+                                <a href="{{ url_for('blog_article', slug=article.slug) }}" class="btn-read-more">Lire l'article</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 5rem 0;">
+                    <p style="font-size: 1.2rem; color: #666;">Nos premiers articles arrivent très bientôt ! 🏊‍♂️</p>
+                    <a href="{{ url_for('index') }}" class="btn-primary-custom" style="display: inline-block; margin-top: 2rem;">Retour à l'accueil</a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('blog_index') }}" style="color: white; text-decoration: none;">Blog</a> • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a> • 
+                <a href="{{ url_for('mentions_legales') }}" style="color: white; text-decoration: none;">Mentions Légales</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

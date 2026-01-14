@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.titre }} | Blog AquaCoach</title>
+    <meta name="description" content="{{ article.resume }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .article-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+        @media (max-width: 900px) {
+            .article-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .article-main {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .article-header-image {
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .article-full-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        .article-full-content h2 {
+            color: var(--primary-color);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .article-full-content p {
+            margin-bottom: 1.5rem;
+        }
+        .sidebar-box {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        .sidebar-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .recent-article-item {
+            margin-bottom: 1.5rem;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .recent-article-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            transition: color 0.3s;
+        }
+        .recent-article-item:hover .recent-article-title {
+            color: var(--primary-color);
+        }
+        .recent-article-date {
+            font-size: 0.8rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
+            <div class="navbar-nav" style="display: flex; gap: 2rem;">
+                <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('blog_index') }}" class="nav-link">Blog</a>
+                <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div class="article-container">
+            <!-- Article Principal -->
+            <main class="article-main">
+                <div class="article-meta" style="color: #999; margin-bottom: 1rem;">
+                    Publié le {{ article.date_publication.strftime('%d %B %Y') if article.date_publication is string == False else article.date_publication[:10] }}
+                </div>
+                <h1 style="font-size: 2.5rem; color: var(--text-dark); margin-bottom: 2rem; line-height: 1.2;">{{ article.titre }}</h1>
+                
+                {% if article.image %}
+                <div class="article-header-image" style="background-image: url('{{ url_for('static', filename='images/' + article.image) }}')"></div>
+                {% endif %}
+                
+                <div class="article-full-content">
+                    {{ article.contenu | safe }}
+                </div>
+                
+                <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #eee; text-align: center;">
+                    <a href="{{ url_for('blog_index') }}" class="btn-primary-custom" style="display: inline-block;">← Retour au blog</a>
+                </div>
+            </main>
+
+            <!-- Sidebar -->
+            <aside>
+                <div class="sidebar-box">
+                    <h3 class="sidebar-title">Articles récents</h3>
+                    {% for recent in recent_articles %}
+                        <a href="{{ url_for('blog_article', slug=recent.slug) }}" class="recent-article-item">
+                            <div class="recent-article-title">{{ recent.titre }}</div>
+                            <div class="recent-article-date">{{ recent.date_publication.strftime('%d %b %Y') if recent.date_publication is string == False else recent.date_publication[:10] }}</div>
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <div class="sidebar-box" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%); color: white;">
+                    <h3 class="sidebar-title" style="color: white; border-bottom-color: white;">Apprendre à nager ?</h3>
+                    <p style="margin-bottom: 1.5rem; opacity: 0.9;">Trouvez un maître-nageur certifié près de chez vous en quelques clics.</p>
+                    <a href="{{ url_for('inscription_client') }}" class="btn-primary-custom" style="background: white; color: var(--primary-color); display: block; text-align: center;">Trouver mon coach</a>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p class="footer-text">
+                &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('blog_index') }}" style="color: white; text-decoration: none;">Blog</a> • 
+                <a href="{{ url_for('contact') }}" style="color: white; text-decoration: none;">Contact</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

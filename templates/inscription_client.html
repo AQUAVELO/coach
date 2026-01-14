@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Client - AquaCoach</title>
+    <title>Trouvez votre Maître-Nageur Certifié | Inscription Client AquaCoach</title>
+    <meta name="description" content="Inscrivez-vous gratuitement pour accéder à notre réseau de maîtres-nageurs certifiés. Trouvez un coach pour vos cours de natation à domicile dans votre département.">
+    <meta name="keywords" content="trouver maître-nageur, cours natation domicile, coach natation particulier, apprendre à nager adulte enfant">
+    <link rel="canonical" href="https://aquacoach.fr/inscription_client">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -13,6 +16,7 @@
             <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
             <div class="navbar-nav" style="display: flex; gap: 2rem;">
                 <a href="{{ url_for('index') }}" class="nav-link">← Retour à l'accueil</a>
+                <a href="{{ url_for('blog_index') }}" class="nav-link">Blog</a>
                 <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
             </div>
         </div>

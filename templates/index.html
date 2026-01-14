@@ -54,6 +54,7 @@
             <a href="{{ url_for('index') }}" class="navbar-brand" style="text-decoration: none;">🌊 AQUACOACH</a>
             <div class="navbar-nav" style="display: flex; gap: 2rem;">
                 <a href="{{ url_for('index') }}" class="nav-link">Accueil</a>
+                <a href="{{ url_for('blog_index') }}" class="nav-link">Blog</a>
                 <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
                 <a href="{{ url_for('admin_login') }}" class="nav-link">Admin</a>
             </div>
@@ -228,6 +229,7 @@
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
             <p class="footer-text">
                 &copy; 2025 AquaCoach - Tous droits réservés • 
+                <a href="{{ url_for('blog_index') }}" class="footer-link">Blog</a> • 
                 <a href="{{ url_for('contact') }}" class="footer-link">Contact</a> • 
                 <a href="{{ url_for('mentions_legales') }}" class="footer-link">Mentions Légales</a> • 
                 <a href="{{ url_for('politique_confidentialite') }}" class="footer-link">Politique de Confidentialité</a> • 

@@ -721,6 +721,18 @@ def init_db():
     
     queries = [
         f"""
+        CREATE TABLE IF NOT EXISTS article (
+            id {pk_type} {auto_inc},
+            titre TEXT NOT NULL,
+            slug VARCHAR(255) UNIQUE NOT NULL,
+            resume TEXT,
+            contenu TEXT NOT NULL,
+            image TEXT,
+            date_publication DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_published INTEGER DEFAULT 1
+        )
+        """,
+        f"""
         CREATE TABLE IF NOT EXISTS nageur (
             id {pk_type} {auto_inc},
             nom TEXT NOT NULL,
@@ -1062,6 +1074,11 @@ def sitemap():
         <loc>https://aquacoach.fr/</loc>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>https://aquacoach.fr/blog</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
     </url>
     <url>
         <loc>https://aquacoach.fr/inscription_nageur</loc>
@@ -1638,6 +1655,29 @@ def delete_nageur(id):
     return redirect(url_for('admin_index'))
 
 
+
+# ============================================
+# BLOG ROUTES
+# ============================================
+
+@app.route("/blog")
+def blog_index():
+    """Liste tous les articles du blog"""
+    articles = query_db("SELECT * FROM article WHERE is_published = 1 ORDER BY date_publication DESC")
+    return render_template("blog.html", articles=articles)
+
+@app.route("/blog/<slug>")
+def blog_article(slug):
+    """Affiche un article complet"""
+    article = query_db("SELECT * FROM article WHERE slug = ?", (slug,), one=True)
+    if not article:
+        flash("Article non trouvé.", "danger")
+        return redirect(url_for("blog_index"))
+    
+    # Récupérer quelques articles récents pour la barre latérale
+    recent_articles = query_db("SELECT * FROM article WHERE slug != ? AND is_published = 1 ORDER BY date_publication DESC LIMIT 3", (slug,))
+    
+    return render_template("article.html", article=article, recent_articles=recent_articles)
 
 # ============================================
 # INITIALISATION

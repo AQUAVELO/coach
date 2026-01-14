@@ -881,13 +881,13 @@ LIENS_PROD = {
     5: "https://buy.stripe.com/8x200k3w39OA3jE2JDe7m07"
 }
 
-# Liens de TEST (Remplacez par vos liens test_... créés dans Stripe)
+# Liens de TEST
 LIENS_TEST = {
-    1: "https://buy.stripe.com/test_3cIaEX3WZ9v3flofwNc3m00", # Exemple de lien test
-    2: "https://buy.stripe.com/test_xxx2",
-    3: "https://buy.stripe.com/test_xxx3",
-    4: "https://buy.stripe.com/test_xxx4",
-    5: "https://buy.stripe.com/test_xxx5"
+    1: "https://buy.stripe.com/test_9B6aEYfeLgcY4nI981e7m03",
+    2: "https://buy.stripe.com/test_8x214o2rZgcY3jEesle7m04",
+    3: "https://buy.stripe.com/test_bJe4gAeaH7Gs1bwac5e7m05",
+    4: "https://buy.stripe.com/test_4gM14o5Eb8Kw1bw5VPe7m06",
+    5: "https://buy.stripe.com/test_8x200k3w39OA3jE2JDe7m07"
 }
 
 @app.route("/confirmation_paiement")

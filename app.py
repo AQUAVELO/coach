@@ -217,7 +217,7 @@ def send_confirmation_email(
             </div>
             <p>Contactez votre maître-nageur pour planifier vos séances.</p>
             <p style="font-size: 0.9em; color: #666; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
-                <em>Note : La mise en relation est effective. Merci de vérifier que le PSE1 du prestataire est à jour de sa formation continue annuelle pour la saison en cours.</em>
+                <em>Note : La mise en relation est effective. Merci de vérifier que la carte professionnelle du nageur est à jour pour la saison en cours.</em>
             </p>
             <p>À très bientôt dans l'eau ! 🏊‍♂️</p>
             <p>L'équipe AquaCoach</p>

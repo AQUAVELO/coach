@@ -135,7 +135,7 @@ aquaconnect/
 ✅ Inscription client et nageur
 ✅ Recherche par département
 ✅ Profils détaillés avec photos
-✅ Paiement simulé (2€)
+✅ Paiement simulé (5€)
 ✅ Dashboard administrateur
 ✅ Base de données SQLite intégrée
 ✅ Interface responsive

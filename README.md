@@ -8,7 +8,7 @@
 - ✅ Inscription rapide avec sélection du département
 - 🔍 Recherche de maîtres-nageurs disponibles dans votre région
 - 👁️ Consultation des profils détaillés (diplômes, tarifs, disponibilités)
-- 💳 Paiement sécurisé des frais de dossier (2€)
+- 💳 Paiement sécurisé des frais de dossier (5€)
 - 📧 Réception d'un email de confirmation avec coordonnées du coach
 - 🎟️ Code de validation unique
 
@@ -102,7 +102,7 @@ Visitez http://localhost:8080 et choisissez votre profil :
 1. Inscription avec vos coordonnées
 2. Sélection de votre département
 3. Choix d'un maître-nageur disponible
-4. Paiement des frais de dossier (2€ - mode démo)
+4. Paiement des frais de dossier (5€ - mode démo)
 5. Réception d'un email avec les coordonnées du coach
 
 ### 3. Parcours Maître-Nageur

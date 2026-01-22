@@ -35,7 +35,7 @@ UPLOAD_FOLDER = os.path.join(app.static_folder, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 # Configuration Stripe Payment Link
-STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03')
+STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.com/4gM8wQ6IfbWIf2m2JDe7m0d')
 
 # Configuration Stripe Checkout (recommandé: montant contrôlé côté serveur)
 # IMPORTANT: ne jamais mettre la clé dans le code. Définissez-la dans .htaccess:
@@ -174,7 +174,7 @@ def send_confirmation_email(
     nageur_email,
     nageur_tel,
     nageur_ville,
-    montant="2,00 €",
+    montant="5,00 €",
 ):
     """Envoie un email de confirmation au client et à l'admin"""
     print(f"\n🔔 ENVOI D'EMAIL")
@@ -933,20 +933,30 @@ STRIPE_TEST_MODE = False  # Mettez à False pour passer en production réellle
 
 # Liens de PRODUCTION
 LIENS_PROD = {
-    1: "https://buy.stripe.com/9B6aEYfeLgcY4nI981e7m03",
-    2: "https://buy.stripe.com/8x214o2rZgcY3jEesle7m04",
-    3: "https://buy.stripe.com/bJe4gAeaH7Gs1bwac5e7m05",
-    4: "https://buy.stripe.com/4gM14o5Eb8Kw1bw5VPe7m06",
-    5: "https://buy.stripe.com/8x200k3w39OA3jE2JDe7m07"
+    1: "https://buy.stripe.com/4gM8wQ6IfbWIf2m2JDe7m0d",
+    2: "https://buy.stripe.com/fZudRa0jR7Gs2fAfwpe7m0e",
+    3: "https://buy.stripe.com/fZu4gA0jR3qc07sdohe7m0f",
+    4: "https://buy.stripe.com/8x29AU4A7gcY8DY5VPe7m0g",
+    5: "https://buy.stripe.com/fZu7sMd6DaSE7zU2JDe7m0h",
+    6: "https://buy.stripe.com/4gM9AU8QnbWI8DYfwpe7m0i",
+    7: "https://buy.stripe.com/8x2aEYc2z8Kw6vQfwpe7m0j",
+    8: "https://buy.stripe.com/aFa9AUaYv1i4bQackde7m0k",
+    9: "https://buy.stripe.com/fZufZi3w3e4Q5rMfwpe7m0l",
+    10: "https://buy.stripe.com/14AdRac2z3qc7zUfwpe7m0m"
 }
 
 # Liens de TEST
 LIENS_TEST = {
-    1: "https://buy.stripe.com/test_9B6aEYfeLgcY4nI981e7m03",
-    2: "https://buy.stripe.com/test_8x214o2rZgcY3jEesle7m04",
-    3: "https://buy.stripe.com/test_bJe4gAeaH7Gs1bwac5e7m05",
-    4: "https://buy.stripe.com/test_4gM14o5Eb8Kw1bw5VPe7m06",
-    5: "https://buy.stripe.com/test_8x200k3w39OA3jE2JDe7m07"
+    1: "https://buy.stripe.com/test_4gM8wQ6IfbWIf2m2JDe7m0d",
+    2: "https://buy.stripe.com/test_fZudRa0jR7Gs2fAfwpe7m0e",
+    3: "https://buy.stripe.com/test_fZu4gA0jR3qc07sdohe7m0f",
+    4: "https://buy.stripe.com/test_8x29AU4A7gcY8DY5VPe7m0g",
+    5: "https://buy.stripe.com/test_fZu7sMd6DaSE7zU2JDe7m0h",
+    6: "https://buy.stripe.com/test_4gM9AU8QnbWI8DYfwpe7m0i",
+    7: "https://buy.stripe.com/test_8x2aEYc2z8Kw6vQfwpe7m0j",
+    8: "https://buy.stripe.com/test_aFa9AUaYv1i4bQackde7m0k",
+    9: "https://buy.stripe.com/test_fZufZi3w3e4Q5rMfwpe7m0l",
+    10: "https://buy.stripe.com/test_14AdRac2z3qc7zUfwpe7m0m"
 }
 
 @app.route("/confirmation_paiement")
@@ -979,7 +989,7 @@ def confirmation_paiement():
     return render_template(
         "confirmation_paiement.html",
         nageurs=nageurs,
-        total=nombre * 2.00,
+        total=nombre * 5.00,
         count=nombre,
         stripe_link=stripe_link,
         test_mode=STRIPE_TEST_MODE
@@ -1019,10 +1029,10 @@ def paiement_valide():
             nageur_email=nageur["email"],
             nageur_tel=nageur["tel"],
             nageur_ville=nageur["ville"],
-            montant="2,00 €",
+            montant="5,00 €",
         )
 
-    total = len(nageurs) * 2.00
+    total = len(nageurs) * 5.00
     code_validation = f"AQ{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
     # 3. Nettoyer la session

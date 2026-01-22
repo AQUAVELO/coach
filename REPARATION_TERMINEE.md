@@ -50,7 +50,7 @@ ADMIN_EMAIL = 'aqua.cannes@gmail.com'
    - Cliquez sur "Confirmer mon choix"
 
 4. **Paiement (MODE DÉMO)** :
-   - Cliquez sur "Payer 2,00 €"
+   - Cliquez sur "Payer 5,00 €"
 
 5. **Page de succès** :
    - Vous verrez un message de confirmation

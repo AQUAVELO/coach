@@ -47,7 +47,7 @@
                 <form method="POST" id="nageurForm">
                     <div style="background: linear-gradient(135deg, #e3f4f4 0%, #d0eaea 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
                         <p style="font-size: 1.1rem; color: #2c5d63; margin: 0;">
-                            💡 <strong>Sélectionnez un ou plusieurs maîtres-nageurs</strong> (2,00 € par nageur)
+                            💡 <strong>Sélectionnez un ou plusieurs maîtres-nageurs</strong> (5,00 € par nageur)
                         </p>
                         <p id="selectedCount" style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color); margin-top: 0.5rem;">
                             0 sélectionné • Total : 0,00 €
@@ -65,7 +65,7 @@
                                 
                                 <!-- Prix badge -->
                                 <div class="prix-badge" style="position: absolute; top: 1.5rem; left: 1.5rem; background: linear-gradient(135deg, #3fb0ac 0%, #2c8d89 100%); color: white; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; opacity: 0; transition: all 0.3s ease;">
-                                    +2,00 €
+                                    +5,00 €
                                 </div>
 
                                 <!-- Nageur Header -->
@@ -227,7 +227,7 @@
             function updateSelectedCount() {
                 const checkedBoxes = document.querySelectorAll('.nageur-checkbox:checked');
                 const count = checkedBoxes.length;
-                const total = count * 2.00;
+                const total = count * 5.00;
 
                 if (count === 0) {
                     selectedCountDiv.innerHTML = '0 sélectionné • Total : 0,00 €';

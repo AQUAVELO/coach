@@ -60,7 +60,7 @@ En mode TEST, utilisez ces numéros de carte :
 
 - **Pas d'abonnement** : Gratuit à installer
 - **Par transaction** : 1,5% + 0,25€
-- **Exemple pour 2€** : vous recevez 1,72€
+- **Exemple pour 5€** : vous recevez 4,72€ (environ, selon frais Stripe)
 
 ## 🆘 Support
 

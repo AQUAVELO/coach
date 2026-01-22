@@ -45,7 +45,7 @@ DEPARTEMENTS = [
 # EMAIL FUNCTIONS
 # ============================================
 
-def send_confirmation_email(client_email, client_prenom, client_nom, nageur_prenom, nageur_nom, nageur_email, nageur_tel, nageur_ville, montant="2,00 €"):
+def send_confirmation_email(client_email, client_prenom, client_nom, nageur_prenom, nageur_nom, nageur_email, nageur_tel, nageur_ville, montant="5,00 €"):
     """Envoie un email de confirmation au client et à l'admin"""
     print(f"\n🔔 ENVOI D'EMAIL")
     print(f"   Client: {client_prenom} {client_nom} <{client_email}>")
@@ -286,7 +286,9 @@ def confirmation_paiement():
     return render_template('confirmation_paiement.html',
                          nageur_prenom=nageur['prenom'],
                          nageur_nom=nageur['nom'],
-                         client_email=client['email'])
+                         client_email=client['email'],
+                         total=5.00,
+                         count=1)
 
 @app.route('/paiement', methods=['POST'])
 def paiement():
@@ -317,7 +319,7 @@ def paiement():
         nageur_email=nageur['email'],
         nageur_tel=nageur['tel'],
         nageur_ville=nageur['ville'],
-        montant="2,00 €"
+        montant="5,00 €"
     )
     
     if code_validation:

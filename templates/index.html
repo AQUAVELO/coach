@@ -67,17 +67,59 @@
         <div class="hero-content animate-fade-in">
             <h1 class="hero-title">Vitalité, Minceur, Bien-être</h1>
             <p class="hero-subtitle">Connectez-vous avec des maîtres-nageurs certifiés pour des cours personnalisés</p>
-            <div class="hero-buttons">
-                <a href="{{ url_for('inscription_client') }}" class="btn-primary-custom">Trouver un maître-nageur</a>
-                <a href="{{ url_for('inscription_nageur') }}" class="btn-outline-custom">🏊 Vous êtes maître-nageur</a>
+        </div>
+    </section>
+
+    <!-- Selection Section (Inspirée par la maquette) -->
+    <section class="section" style="background-color: #fff; padding-top: 4rem;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <div style="text-align: center; margin-bottom: 4rem;">
+                <h2 style="color: #4FB3E8; font-size: 2.8rem; font-weight: 800; margin-bottom: 1.5rem; text-transform: none; border-bottom: none;">Cours de Natation & Coaching Aquatique</h2>
+                <p style="font-size: 1.25rem; color: #666; max-width: 900px; margin: 0 auto; line-height: 1.6;">
+                    Découvrez nos programmes de natation adaptés à tous les niveaux. Que vous souhaitiez apprendre à nager, vaincre l'aquaphobie ou vous perfectionner, nos maîtres-nageurs certifiés vous accompagnent.
+                </p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem;">
+                <!-- Card 1: Trouver un Maître-Nageur -->
+                <div style="background: white; border-radius: 25px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: transform 0.3s ease; border: 1px solid #f0f0f0;">
+                    <div style="height: 350px; overflow: hidden;">
+                        <img src="https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?auto=format&fit=crop&q=80&w=800" alt="Trouver un Maître-Nageur" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="padding: 2.5rem;">
+                        <h3 style="color: #333; font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">Trouver un Maître-Nageur</h3>
+                        <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                            Vous recherchez des cours de natation pour vous ou vos enfants ? Trouvez facilement un coach professionnel près de chez vous pour un apprentissage personnalisé et sécurisé.
+                        </p>
+                        <a href="{{ url_for('inscription_client') }}" style="display: inline-block; background-color: #4FB3E8; color: white; padding: 1.2rem 2.5rem; border-radius: 15px; text-decoration: none; font-weight: 700; font-size: 1rem; text-transform: uppercase; transition: all 0.3s ease; border: 2px solid #4FB3E8;">
+                            DÉCOUVRIR AQUACOACH
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Devenir Coach Partenaire -->
+                <div style="background: white; border-radius: 25px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.08); transition: transform 0.3s ease; border: 1px solid #f0f0f0;">
+                    <div style="height: 350px; overflow: hidden;">
+                        <img src="https://images.unsplash.com/photo-1560090500-7433a4d21443?auto=format&fit=crop&q=80&w=800" alt="Devenir Coach Partenaire" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="padding: 2.5rem;">
+                        <h3 style="color: #333; font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">Devenir Coach Partenaire</h3>
+                        <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
+                            Vous êtes maître-nageur diplômé (BEESAN, BPJEPS AAN) ? Rejoignez notre réseau, développez votre clientèle et gérez vos cours en toute liberté avec nos outils dédiés.
+                        </p>
+                        <a href="{{ url_for('inscription_nageur') }}" style="display: inline-block; background-color: transparent; color: #4FB3E8; padding: 1.2rem 2.5rem; border-radius: 15px; text-decoration: none; font-weight: 700; font-size: 1rem; text-transform: uppercase; transition: all 0.3s ease; border: 2px solid #4FB3E8;">
+                            S'INSCRIRE COMME COACH
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works Section -->
-    <section class="section" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+    <section class="section" style="background: #F8F9FA;">
         <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
-            <h2 class="section-title" style="color: var(--primary-color);">🌊 Comment trouver votre maître-nageur ?</h2>
+            <h2 class="section-title">🌊 Comment ça marche ?</h2>
             
             <div style="text-align: center; max-width: 800px; margin: 0 auto 3rem;">
                 <p style="font-size: 1.1rem; color: #666; line-height: 1.8;">

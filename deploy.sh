@@ -28,7 +28,7 @@ echo ""
 
 # 2. Installation/mise à jour des dépendances
 echo "📦 Installation des dépendances Python..."
-pip3 install --user -r requirements.txt
+python3 -m pip install --user -r requirements.txt
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Dépendances installées${NC}"
 else

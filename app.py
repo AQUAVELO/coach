@@ -1650,6 +1650,78 @@ def strava_notifications_task():
     return jsonify(summary)
 
 
+@app.route("/tasks/strava-webhook-subscribe", methods=["POST"])
+def strava_webhook_subscribe_task():
+    """Cree l'abonnement webhook Strava sans exposer le client secret."""
+    if not STRAVA_CRON_SECRET:
+        return jsonify({"ok": False, "error": "cron_not_configured"}), 503
+
+    provided_secret = request.headers.get("X-AquaCoach-Cron-Secret", "")
+    if not provided_secret or not secrets.compare_digest(
+        provided_secret,
+        STRAVA_CRON_SECRET,
+    ):
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    if (
+        not STRAVA_CLIENT_ID
+        or not STRAVA_CLIENT_SECRET
+        or not STRAVA_WEBHOOK_VERIFY_TOKEN
+    ):
+        return jsonify({"ok": False, "error": "strava_not_configured"}), 503
+
+    try:
+        existing_response = requests.get(
+            "https://www.strava.com/api/v3/push_subscriptions",
+            params={
+                "client_id": STRAVA_CLIENT_ID,
+                "client_secret": STRAVA_CLIENT_SECRET,
+            },
+            timeout=20,
+        )
+        existing_response.raise_for_status()
+        existing = existing_response.json()
+        if existing:
+            return jsonify(
+                {
+                    "ok": True,
+                    "created": False,
+                    "subscription": existing[0],
+                }
+            )
+
+        create_response = requests.post(
+            "https://www.strava.com/api/v3/push_subscriptions",
+            data={
+                "client_id": STRAVA_CLIENT_ID,
+                "client_secret": STRAVA_CLIENT_SECRET,
+                "callback_url": "https://aquacoach.fr/webhooks/strava",
+                "verify_token": STRAVA_WEBHOOK_VERIFY_TOKEN,
+            },
+            timeout=30,
+        )
+        create_response.raise_for_status()
+        return jsonify(
+            {
+                "ok": True,
+                "created": True,
+                "subscription": create_response.json(),
+            }
+        )
+    except requests.RequestException as exc:
+        app.logger.error("Abonnement webhook Strava impossible: %s", exc)
+        error_body = ""
+        if getattr(exc, "response", None) is not None:
+            error_body = exc.response.text[:500]
+        return jsonify(
+            {
+                "ok": False,
+                "error": "strava_subscription_failed",
+                "details": error_body or str(exc),
+            }
+        ), 502
+
+
 @app.route("/inscription_client")
 def inscription_client():
     return render_template("inscription_client.html", departements=DEPARTEMENTS)

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Consultez vos dernières activités Strava dans AquaCoach.">
+    <title>Mes activités Strava | AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="activities-page">
+    <header class="activities-header">
+        <nav class="activities-nav">
+            <a href="{{ url_for('index') }}" class="activities-brand">AQUACOACH</a>
+            <div class="activities-nav-actions">
+                <a href="{{ url_for('strava_login') }}">Reconnecter Strava</a>
+                <a href="{{ url_for('index') }}">Accueil</a>
+            </div>
+        </nav>
+
+        <div class="activities-hero">
+            <div>
+                <p class="activities-kicker">Tableau de bord Strava</p>
+                <h1>
+                    {% if athlete and athlete.firstname %}
+                        Les activités de {{ athlete.firstname }}
+                    {% else %}
+                        Mes activités
+                    {% endif %}
+                </h1>
+                <p>Vos 30 dernières séances, réunies dans une vue simple et lisible.</p>
+            </div>
+            {% if athlete and athlete.profile %}
+                <img src="{{ athlete.profile }}" alt="Photo de profil Strava" class="activities-avatar">
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="activities-main">
+        <section class="activities-stats" aria-label="Résumé des activités">
+            <div>
+                <span>Activités</span>
+                <strong>{{ totals.count }}</strong>
+            </div>
+            <div>
+                <span>Distance totale</span>
+                <strong>{{ totals.distance }} km</strong>
+            </div>
+            <div>
+                <span>Dénivelé cumulé</span>
+                <strong>{{ totals.elevation }} m</strong>
+            </div>
+        </section>
+
+        {% if activities %}
+            <section class="activities-list" aria-label="Liste des activités Strava">
+                {% for activity in activities %}
+                    <article class="activity-row">
+                        <div class="activity-type">{{ activity.type }}</div>
+                        <div class="activity-main">
+                            <p class="activity-date">{{ activity.date }}</p>
+                            <h2>{{ activity.name }}</h2>
+                            {% if activity.private %}
+                                <span class="activity-private">Privée</span>
+                            {% endif %}
+                        </div>
+                        <dl class="activity-metrics">
+                            <div>
+                                <dt>Distance</dt>
+                                <dd>{{ activity.distance }} km</dd>
+                            </div>
+                            <div>
+                                <dt>Durée</dt>
+                                <dd>{{ activity.duration }}</dd>
+                            </div>
+                            <div>
+                                <dt>Dénivelé</dt>
+                                <dd>{{ activity.elevation }} m</dd>
+                            </div>
+                            {% if activity.average_heartrate %}
+                                <div>
+                                    <dt>Fréquence cardiaque</dt>
+                                    <dd>{{ activity.average_heartrate|round|int }} bpm</dd>
+                                </div>
+                            {% endif %}
+                        </dl>
+                    </article>
+                {% endfor %}
+            </section>
+        {% else %}
+            <section class="activities-empty">
+                <h2>Aucune activité disponible</h2>
+                <p>Enregistrez une activité dans Strava puis rechargez cette page.</p>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

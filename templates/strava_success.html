@@ -18,7 +18,8 @@
             AquaCoach peut maintenant synchroniser vos activités autorisées.
         </p>
         <div class="strava-result-actions">
-            <a href="{{ url_for('index') }}" class="strava-result-primary">Revenir à AquaCoach</a>
+            <a href="{{ url_for('strava_activities') }}" class="strava-result-primary">Voir mes activités</a>
+            <a href="{{ url_for('index') }}" class="strava-result-secondary">Revenir à AquaCoach</a>
             <a href="{{ url_for('strava_login') }}" class="strava-result-secondary">Reconnecter Strava</a>
         </div>
     </main>

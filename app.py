@@ -800,6 +800,98 @@ def save_strava_connection(token_data, accepted_scope):
     return athlete_id, athlete
 
 
+def get_valid_strava_token(athlete_id):
+    """Retourne un jeton Strava valide et le rafraichit si necessaire."""
+    token = query_db(
+        "SELECT * FROM strava_token WHERE athlete_id = ?",
+        (athlete_id,),
+        one=True,
+    )
+    if not token:
+        return None
+
+    if int(token["expires_at"]) > int(datetime.now().timestamp()) + 60:
+        return token["access_token"]
+
+    response = requests.post(
+        STRAVA_TOKEN_URL,
+        data={
+            "client_id": STRAVA_CLIENT_ID,
+            "client_secret": STRAVA_CLIENT_SECRET,
+            "grant_type": "refresh_token",
+            "refresh_token": token["refresh_token"],
+        },
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    refreshed = response.json()
+
+    execute_db(
+        """
+        UPDATE strava_token
+        SET access_token = ?, refresh_token = ?, expires_at = ?,
+            token_type = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE athlete_id = ?
+        """,
+        (
+            refreshed["access_token"],
+            refreshed["refresh_token"],
+            int(refreshed["expires_at"]),
+            refreshed.get("token_type", "Bearer"),
+            athlete_id,
+        ),
+    )
+    return refreshed["access_token"]
+
+
+def format_activity(activity):
+    """Prepare une activite Strava pour son affichage."""
+    type_labels = {
+        "Ride": "Velo",
+        "VirtualRide": "Velo virtuel",
+        "Run": "Course",
+        "Walk": "Marche",
+        "Hike": "Randonnee",
+        "Swim": "Natation",
+        "Workout": "Entrainement",
+        "WeightTraining": "Musculation",
+        "Yoga": "Yoga",
+    }
+    started_at = activity.get("start_date_local") or activity.get("start_date")
+    try:
+        activity_date = datetime.strptime(started_at[:19], "%Y-%m-%dT%H:%M:%S")
+        date_label = activity_date.strftime("%d/%m/%Y a %H:%M")
+    except (TypeError, ValueError):
+        date_label = "Date inconnue"
+
+    moving_seconds = int(activity.get("moving_time") or 0)
+    hours, remainder = divmod(moving_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        duration_label = "{} h {:02d}".format(hours, minutes)
+    else:
+        duration_label = "{} min {:02d}".format(minutes, seconds)
+
+    return {
+        "id": activity.get("id"),
+        "name": activity.get("name") or "Activite Strava",
+        "type": type_labels.get(
+            activity.get("sport_type") or activity.get("type"),
+            activity.get("sport_type") or activity.get("type") or "Activite",
+        ),
+        "date": date_label,
+        "distance": round(float(activity.get("distance") or 0) / 1000, 2),
+        "duration": duration_label,
+        "elevation": round(float(activity.get("total_elevation_gain") or 0)),
+        "average_heartrate": activity.get("average_heartrate"),
+        "private": bool(activity.get("private")),
+    }
+
+
 def init_db():
     print("🛠️ Initialisation de la base de données...")
     os.makedirs(app.instance_path, exist_ok=True)
@@ -1042,6 +1134,58 @@ def strava_callback():
 
     session["strava_athlete_id"] = athlete_id
     return render_template("strava_success.html", athlete=athlete)
+
+
+@app.route("/strava/activities")
+def strava_activities():
+    """Affiche les dernieres activites du compte Strava connecte."""
+    athlete_id = session.get("strava_athlete_id")
+    if not athlete_id:
+        flash("Connectez d'abord votre compte Strava.", "warning")
+        return redirect(url_for("strava_login"))
+
+    athlete = query_db(
+        "SELECT * FROM strava_athlete WHERE athlete_id = ?",
+        (athlete_id,),
+        one=True,
+    )
+
+    try:
+        access_token = get_valid_strava_token(athlete_id)
+        if not access_token:
+            raise ValueError("Jeton Strava introuvable")
+
+        response = requests.get(
+            "https://www.strava.com/api/v3/athlete/activities",
+            params={"page": 1, "per_page": 30},
+            headers={
+                "Authorization": "Bearer {}".format(access_token),
+                "Accept": "application/json",
+                "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+        activities = [format_activity(item) for item in response.json()]
+    except (requests.RequestException, ValueError, KeyError) as exc:
+        app.logger.error("Echec lecture activites Strava: %s", exc)
+        flash(
+            "Impossible de charger vos activites Strava. Reconnectez votre compte.",
+            "danger",
+        )
+        return redirect(url_for("strava_login"))
+
+    totals = {
+        "count": len(activities),
+        "distance": round(sum(item["distance"] for item in activities), 1),
+        "elevation": int(sum(item["elevation"] for item in activities)),
+    }
+    return render_template(
+        "strava_activities.html",
+        athlete=athlete,
+        activities=activities,
+        totals=totals,
+    )
 
 
 @app.route("/inscription_client")

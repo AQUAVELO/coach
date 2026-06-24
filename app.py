@@ -60,6 +60,11 @@ STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize"
 STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"
 STRAVA_SCOPE = "read,activity:read_all,profile:read_all"
 
+# Notifications Telegram des nouvelles seances Strava
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+STRAVA_CRON_SECRET = os.environ.get("STRAVA_CRON_SECRET")
+
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD_HASH = generate_password_hash("admin123")  # Mot de passe: admin123
@@ -908,6 +913,78 @@ def format_activity(activity):
     }
 
 
+def build_swim_telegram_message(athlete, activity):
+    """Construit le resume Telegram d'une seance de natation."""
+    athlete_name = " ".join(
+        part
+        for part in (
+            athlete.get("firstname", "") if athlete else "",
+            athlete.get("lastname", "") if athlete else "",
+        )
+        if part
+    )
+    lines = [
+        "Nouvelle seance de natation",
+        "",
+        activity["name"],
+        activity["date"],
+    ]
+    if athlete_name:
+        lines.append("Athlete : {}".format(athlete_name))
+
+    lines.extend(
+        [
+            "Distance : {} km".format(activity["distance"]),
+            "Duree : {}".format(activity["duration"]),
+        ]
+    )
+    if activity.get("pace_per_100m"):
+        lines.append("Allure moyenne : {}".format(activity["pace_per_100m"]))
+    if activity.get("calories") is not None:
+        lines.append("Calories : {} kcal".format(int(round(activity["calories"]))))
+    if activity.get("average_heartrate"):
+        lines.append(
+            "FC moyenne : {} bpm".format(
+                int(round(activity["average_heartrate"]))
+            )
+        )
+    if activity.get("max_heartrate"):
+        lines.append(
+            "FC maximale : {} bpm".format(
+                int(round(activity["max_heartrate"]))
+            )
+        )
+    if activity.get("id"):
+        lines.extend(
+            [
+                "",
+                "Voir la seance : https://www.strava.com/activities/{}".format(
+                    activity["id"]
+                ),
+            ]
+        )
+    return "\n".join(lines)
+
+
+def send_telegram_message(text):
+    """Envoie un message via l'API Bot Telegram."""
+    response = requests.post(
+        "https://api.telegram.org/bot{}/sendMessage".format(
+            TELEGRAM_BOT_TOKEN
+        ),
+        json={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": text,
+            "disable_web_page_preview": True,
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    result = response.json()
+    if not result.get("ok"):
+        raise ValueError(result.get("description") or "Erreur Telegram")
+
+
 def init_db():
     print("🛠️ Initialisation de la base de données...")
     os.makedirs(app.instance_path, exist_ok=True)
@@ -999,6 +1076,19 @@ def init_db():
             token_type VARCHAR(32) DEFAULT 'Bearer',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS strava_notification_state (
+            athlete_id VARCHAR(32) PRIMARY KEY,
+            initialized_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS strava_notification (
+            activity_id BIGINT PRIMARY KEY,
+            athlete_id VARCHAR(32) NOT NULL,
+            notified_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """
     ]
@@ -1244,6 +1334,137 @@ def strava_activities():
         activities=activities,
         totals=totals,
     )
+
+
+@app.route("/tasks/strava-notifications", methods=["POST"])
+def strava_notifications_task():
+    """Detecte les nouvelles natations et les notifie sur Telegram."""
+    if not STRAVA_CRON_SECRET:
+        return jsonify({"ok": False, "error": "cron_not_configured"}), 503
+
+    provided_secret = request.headers.get("X-AquaCoach-Cron-Secret", "")
+    if not provided_secret or not secrets.compare_digest(
+        provided_secret,
+        STRAVA_CRON_SECRET,
+    ):
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return jsonify({"ok": False, "error": "telegram_not_configured"}), 503
+
+    athletes = query_db("SELECT * FROM strava_athlete")
+    summary = {
+        "ok": True,
+        "athletes": len(athletes),
+        "initialized": 0,
+        "notifications": 0,
+        "errors": [],
+    }
+
+    for athlete in athletes:
+        athlete_id = str(athlete["athlete_id"])
+        try:
+            access_token = get_valid_strava_token(athlete_id)
+            if not access_token:
+                raise ValueError("Jeton Strava introuvable")
+
+            response = requests.get(
+                "https://www.strava.com/api/v3/athlete/activities",
+                params={"page": 1, "per_page": 10},
+                headers={
+                    "Authorization": "Bearer {}".format(access_token),
+                    "Accept": "application/json",
+                    "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+                },
+                timeout=20,
+            )
+            response.raise_for_status()
+            swims = [
+                item
+                for item in response.json()
+                if (item.get("sport_type") or item.get("type")) == "Swim"
+                and item.get("id")
+            ]
+
+            state = query_db(
+                """
+                SELECT athlete_id FROM strava_notification_state
+                WHERE athlete_id = ?
+                """,
+                (athlete_id,),
+                one=True,
+            )
+            if not state:
+                for swim in swims:
+                    execute_db(
+                        """
+                        INSERT INTO strava_notification
+                            (activity_id, athlete_id)
+                        VALUES (?, ?)
+                        """,
+                        (swim["id"], athlete_id),
+                    )
+                execute_db(
+                    """
+                    INSERT INTO strava_notification_state (athlete_id)
+                    VALUES (?)
+                    """,
+                    (athlete_id,),
+                )
+                summary["initialized"] += 1
+                continue
+
+            for swim in reversed(swims):
+                already_sent = query_db(
+                    """
+                    SELECT activity_id FROM strava_notification
+                    WHERE activity_id = ?
+                    """,
+                    (swim["id"],),
+                    one=True,
+                )
+                if already_sent:
+                    continue
+
+                detail_response = requests.get(
+                    "https://www.strava.com/api/v3/activities/{}".format(
+                        swim["id"]
+                    ),
+                    headers={
+                        "Authorization": "Bearer {}".format(access_token),
+                        "Accept": "application/json",
+                        "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+                    },
+                    timeout=20,
+                )
+                detail_response.raise_for_status()
+                activity = format_activity(detail_response.json())
+
+                send_telegram_message(
+                    build_swim_telegram_message(dict(athlete), activity)
+                )
+                execute_db(
+                    """
+                    INSERT INTO strava_notification
+                        (activity_id, athlete_id)
+                    VALUES (?, ?)
+                    """,
+                    (swim["id"], athlete_id),
+                )
+                summary["notifications"] += 1
+        except (requests.RequestException, ValueError, KeyError) as exc:
+            app.logger.error(
+                "Notification Strava impossible pour %s: %s",
+                athlete_id,
+                exc,
+            )
+            summary["errors"].append(
+                {"athlete_id": athlete_id, "error": str(exc)}
+            )
+
+    if summary["errors"]:
+        summary["ok"] = False
+    return jsonify(summary)
 
 
 @app.route("/inscription_client")

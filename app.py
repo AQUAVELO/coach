@@ -56,7 +56,7 @@ STRAVA_REDIRECT_URI = os.environ.get(
     "https://aquacoach.fr/auth/callback",
 )
 STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize"
-STRAVA_TOKEN_URL = "https://www.strava.com/api/v3/oauth/token"
+STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"
 STRAVA_SCOPE = "read,activity:read_all,profile:read_all"
 
 # Identifiants admin (à changer en production !)

@@ -64,6 +64,9 @@ STRAVA_SCOPE = "read,activity:read_all,profile:read_all"
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 STRAVA_CRON_SECRET = os.environ.get("STRAVA_CRON_SECRET")
+STRAVA_WEBHOOK_VERIFY_TOKEN = (
+    os.environ.get("STRAVA_WEBHOOK_VERIFY_TOKEN") or STRAVA_CRON_SECRET
+)
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -985,6 +988,114 @@ def send_telegram_message(text):
         raise ValueError(result.get("description") or "Erreur Telegram")
 
 
+def process_strava_webhook_events():
+    """Traite les evenements webhook en attente et envoie Telegram."""
+    events = query_db(
+        """
+        SELECT * FROM strava_webhook_event
+        WHERE status = 'pending'
+        ORDER BY event_time ASC
+        """
+    )
+    result = {"processed": 0, "notifications": 0, "errors": []}
+
+    for event in events:
+        activity_id = event["activity_id"]
+        athlete_id = str(event["athlete_id"])
+        try:
+            athlete = query_db(
+                "SELECT * FROM strava_athlete WHERE athlete_id = ?",
+                (athlete_id,),
+                one=True,
+            )
+            if not athlete:
+                raise ValueError("Athlete Strava inconnu")
+
+            already_sent = query_db(
+                """
+                SELECT activity_id FROM strava_notification
+                WHERE activity_id = ?
+                """,
+                (activity_id,),
+                one=True,
+            )
+            if already_sent:
+                execute_db(
+                    """
+                    UPDATE strava_webhook_event
+                    SET status = 'processed', processed_at = CURRENT_TIMESTAMP
+                    WHERE activity_id = ?
+                    """,
+                    (activity_id,),
+                )
+                result["processed"] += 1
+                continue
+
+            access_token = get_valid_strava_token(athlete_id)
+            if not access_token:
+                raise ValueError("Jeton Strava introuvable")
+
+            detail_response = requests.get(
+                "https://www.strava.com/api/v3/activities/{}".format(
+                    activity_id
+                ),
+                headers={
+                    "Authorization": "Bearer {}".format(access_token),
+                    "Accept": "application/json",
+                    "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+                },
+                timeout=20,
+            )
+            detail_response.raise_for_status()
+            detail = detail_response.json()
+            sport_type = detail.get("sport_type") or detail.get("type")
+
+            if sport_type == "Swim":
+                activity = format_activity(detail)
+                send_telegram_message(
+                    build_swim_telegram_message(dict(athlete), activity)
+                )
+                execute_db(
+                    """
+                    INSERT INTO strava_notification
+                        (activity_id, athlete_id)
+                    VALUES (?, ?)
+                    """,
+                    (activity_id, athlete_id),
+                )
+                result["notifications"] += 1
+
+            execute_db(
+                """
+                UPDATE strava_webhook_event
+                SET status = 'processed', processed_at = CURRENT_TIMESTAMP,
+                    last_error = NULL
+                WHERE activity_id = ?
+                """,
+                (activity_id,),
+            )
+            result["processed"] += 1
+        except (requests.RequestException, ValueError, KeyError) as exc:
+            app.logger.error(
+                "Webhook Strava impossible pour %s: %s",
+                activity_id,
+                exc,
+            )
+            execute_db(
+                """
+                UPDATE strava_webhook_event
+                SET attempts = attempts + 1, last_error = ?
+                WHERE activity_id = ?
+                """,
+                (str(exc)[:500], activity_id),
+            )
+            result["errors"].append(
+                {"activity_id": activity_id, "error": str(exc)}
+            )
+
+    return result
+
+
 def init_db():
     print("🛠️ Initialisation de la base de données...")
     os.makedirs(app.instance_path, exist_ok=True)
@@ -1089,6 +1200,18 @@ def init_db():
             activity_id BIGINT PRIMARY KEY,
             athlete_id VARCHAR(32) NOT NULL,
             notified_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS strava_webhook_event (
+            activity_id BIGINT PRIMARY KEY,
+            athlete_id VARCHAR(32) NOT NULL,
+            event_time BIGINT NOT NULL,
+            status VARCHAR(20) DEFAULT 'pending',
+            attempts INTEGER DEFAULT 0,
+            last_error TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            processed_at DATETIME
         )
         """
     ]
@@ -1336,6 +1459,60 @@ def strava_activities():
     )
 
 
+@app.route("/webhooks/strava", methods=["GET", "POST"])
+def strava_webhook():
+    """Valide l'abonnement Strava et met les activites en file d'attente."""
+    if request.method == "GET":
+        verify_token = request.args.get("hub.verify_token", "")
+        challenge = request.args.get("hub.challenge", "")
+        mode = request.args.get("hub.mode", "")
+
+        if (
+            mode == "subscribe"
+            and challenge
+            and STRAVA_WEBHOOK_VERIFY_TOKEN
+            and secrets.compare_digest(
+                verify_token,
+                STRAVA_WEBHOOK_VERIFY_TOKEN,
+            )
+        ):
+            return jsonify({"hub.challenge": challenge})
+        return jsonify({"error": "invalid_verification"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    if (
+        payload.get("object_type") == "activity"
+        and payload.get("aspect_type") == "create"
+        and payload.get("object_id")
+        and payload.get("owner_id")
+    ):
+        activity_id = int(payload["object_id"])
+        existing = query_db(
+            """
+            SELECT activity_id FROM strava_webhook_event
+            WHERE activity_id = ?
+            """,
+            (activity_id,),
+            one=True,
+        )
+        if not existing:
+            execute_db(
+                """
+                INSERT INTO strava_webhook_event
+                    (activity_id, athlete_id, event_time)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    activity_id,
+                    str(payload["owner_id"]),
+                    int(payload.get("event_time") or 0),
+                ),
+            )
+
+    # Strava exige un accusé de réception rapide, même pour les événements ignorés.
+    return jsonify({"ok": True})
+
+
 @app.route("/tasks/strava-notifications", methods=["POST"])
 def strava_notifications_task():
     """Detecte les nouvelles natations et les notifie sur Telegram."""
@@ -1358,8 +1535,14 @@ def strava_notifications_task():
         "athletes": len(athletes),
         "initialized": 0,
         "notifications": 0,
+        "webhook_processed": 0,
         "errors": [],
     }
+
+    webhook_result = process_strava_webhook_events()
+    summary["webhook_processed"] = webhook_result["processed"]
+    summary["notifications"] += webhook_result["notifications"]
+    summary["errors"].extend(webhook_result["errors"])
 
     for athlete in athletes:
         athlete_id = str(athlete["athlete_id"])

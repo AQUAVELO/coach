@@ -1682,13 +1682,40 @@ def strava_webhook_subscribe_task():
         existing_response.raise_for_status()
         existing = existing_response.json()
         if existing:
-            return jsonify(
-                {
-                    "ok": True,
-                    "created": False,
-                    "subscription": existing[0],
-                }
+            current = existing[0]
+            expected_callback = "https://aquacoach.fr/webhooks/strava"
+            if current.get("callback_url") == expected_callback:
+                return jsonify(
+                    {
+                        "ok": True,
+                        "created": False,
+                        "subscription": current,
+                    }
+                )
+
+            if request.args.get("replace") != "1":
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "subscription_exists",
+                        "subscription": current,
+                        "replace_url": (
+                            "/tasks/strava-webhook-subscribe?replace=1"
+                        ),
+                    }
+                ), 409
+
+            delete_response = requests.delete(
+                "https://www.strava.com/api/v3/push_subscriptions/{}".format(
+                    current["id"]
+                ),
+                params={
+                    "client_id": STRAVA_CLIENT_ID,
+                    "client_secret": STRAVA_CLIENT_SECRET,
+                },
+                timeout=20,
             )
+            delete_response.raise_for_status()
 
         create_response = requests.post(
             "https://www.strava.com/api/v3/push_subscriptions",

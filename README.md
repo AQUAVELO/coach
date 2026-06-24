@@ -37,8 +37,8 @@
 
 ```bash
 # Cloner le repository
-git clone https://github.com/AQUAVELO/coach.git
-cd coach
+git clone https://github.com/AQUAVELO/coach.git natation
+cd natation
 
 # Créer un environnement virtuel
 python3 -m venv venv
@@ -121,7 +121,7 @@ Visitez http://localhost:8080 et choisissez votre profil :
 ## 📁 Structure du Projet
 
 ```
-coach/
+natation/
 ├── app.py                      # Application Flask principale
 ├── requirements.txt            # Dépendances Python
 ├── .gitignore                  # Fichiers à ignorer

@@ -13,21 +13,17 @@
 
 **macOS/Linux:**
 ```bash
-cd aquaconnect
 chmod +x start.sh
 ./start.sh
 ```
 
 **Windows:**
 ```cmd
-cd aquaconnect
 start.bat
 ```
 
 **Option B - Manuel:**
 ```bash
-cd aquaconnect
-
 # Créer l'environnement virtuel
 python3 -m venv venv
 
@@ -121,7 +117,7 @@ python --version  # Doit être 3.8+
 ## 📁 Structure Essentielle
 
 ```
-aquaconnect/
+natation/
 ├── app.py              # ⚙️ Application principale
 ├── start.sh/.bat       # 🚀 Scripts de lancement
 ├── requirements.txt    # 📦 Dépendances
@@ -151,7 +147,6 @@ aquaconnect/
 
 Pour mettre à jour l'application:
 ```bash
-cd aquaconnect
 git pull  # si vous utilisez git
 pip install -r requirements.txt --upgrade
 ```
@@ -162,6 +157,6 @@ Consultez **README.md** pour la documentation complète.
 
 ---
 
-**🌊 Profitez d'AquaConnect !**
+**🌊 Profitez d'AquaCoach !**
 
 Si vous avez des questions, consultez le README.md ou les logs dans le terminal.

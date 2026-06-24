@@ -10,7 +10,7 @@ echo "========================================== 🌊"
 echo ""
 
 # Configuration
-APP_DIR=~/coach
+APP_DIR=~/www/natation
 PYTHON_BIN=/usr/bin/python3.10
 
 # Couleurs pour les messages

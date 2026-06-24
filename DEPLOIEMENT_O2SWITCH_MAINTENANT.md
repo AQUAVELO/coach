@@ -25,7 +25,7 @@ ssh aquavelo@aquacoach.fr
 ## 📥 ÉTAPE 2 : Aller dans le dossier du site
 
 ```bash
-cd ~/coach
+cd ~/www/natation
 ```
 
 ---
@@ -333,7 +333,7 @@ git push origin main
 Cochez chaque étape :
 
 - [ ] Connexion SSH réussie
-- [ ] `cd ~/coach` effectué
+- [ ] `cd ~/www/natation` effectué
 - [ ] `git pull origin main` effectué
 - [ ] `.htaccess` modifié (VOTRE_USER et SECRET_KEY)
 - [ ] Base de données sauvegardée
@@ -369,7 +369,7 @@ Si tous les tests passent, votre site est **100% opérationnel** avec :
 Pour les prochaines mises à jour, utilisez simplement le script automatique :
 
 ```bash
-cd ~/coach
+cd ~/www/natation
 ./deploy.sh
 ```
 

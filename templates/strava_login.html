@@ -4,8 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Connectez votre compte Strava à AquaCoach pour synchroniser vos activités sportives.">
+    <meta name="theme-color" content="#073f4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AquaCoach">
     <title>Connexion Strava | AquaCoach</title>
     <link rel="canonical" href="https://aquacoach.fr/strava">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-180.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="strava-page">
@@ -72,5 +78,6 @@
             </div>
         </section>
     </main>
+    <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
 </body>
 </html>

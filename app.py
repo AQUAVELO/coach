@@ -7,6 +7,7 @@ from flask import (
     session,
     flash,
     jsonify,
+    send_from_directory,
 )
 import sqlite3
 import pymysql
@@ -1057,6 +1058,19 @@ def strava_login():
         "strava_login.html",
         strava_configured=bool(STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET),
     )
+
+
+@app.route("/service-worker.js")
+def service_worker():
+    """Expose le service worker a la racine pour couvrir toute la PWA."""
+    response = send_from_directory(
+        app.static_folder,
+        "service-worker.js",
+        mimetype="application/javascript",
+    )
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 
 @app.route("/strava/connect")

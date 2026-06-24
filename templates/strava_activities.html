@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Consultez vos dernières activités Strava dans AquaCoach.">
+    <meta name="theme-color" content="#073f4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AquaCoach">
     <title>Mes activités Strava | AquaCoach</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-180.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="activities-page">
@@ -12,6 +18,7 @@
         <nav class="activities-nav">
             <a href="{{ url_for('index') }}" class="activities-brand">AQUACOACH</a>
             <div class="activities-nav-actions">
+                <button type="button" class="activities-install-button" data-install-app>Installer</button>
                 <a href="{{ url_for('strava_login') }}">Reconnecter Strava</a>
                 <a href="{{ url_for('index') }}">Accueil</a>
             </div>
@@ -93,5 +100,23 @@
             </section>
         {% endif %}
     </main>
+
+    <div class="install-sheet" data-install-sheet hidden>
+        <button type="button" class="install-sheet-backdrop" data-close-install aria-label="Fermer"></button>
+        <section class="install-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="install-title">
+            <div class="install-sheet-handle" aria-hidden="true"></div>
+            <img src="{{ url_for('static', filename='icons/icon-180.png') }}" alt="" class="install-sheet-icon">
+            <p class="activities-kicker">Application iPhone</p>
+            <h2 id="install-title">Ajouter AquaCoach à l'écran d'accueil</h2>
+            <ol>
+                <li>Dans Safari, touchez le bouton <strong>Partager</strong>.</li>
+                <li>Choisissez <strong>Sur l'écran d'accueil</strong>.</li>
+                <li>Touchez <strong>Ajouter</strong>.</li>
+            </ol>
+            <button type="button" class="install-sheet-close" data-close-install>J'ai compris</button>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
 </body>
 </html>

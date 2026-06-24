@@ -848,8 +848,20 @@ body {
 
 .activities-nav-actions {
     display: flex;
+    align-items: center;
     gap: 24px;
     font-size: 0.9rem;
+}
+
+.activities-install-button {
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 5px;
+    background: transparent;
+    color: white;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
 }
 
 .activities-hero {
@@ -1018,6 +1030,83 @@ body {
     font-weight: 500;
 }
 
+.install-sheet[hidden] {
+    display: none;
+}
+
+.install-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    align-items: end;
+}
+
+.install-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(2, 31, 38, 0.58);
+}
+
+.install-sheet-panel {
+    position: relative;
+    width: min(100%, 520px);
+    margin: 0 auto;
+    padding: 16px 28px max(30px, env(safe-area-inset-bottom));
+    border-radius: 8px 8px 0 0;
+    background: white;
+    box-shadow: 0 -18px 60px rgba(2, 31, 38, 0.18);
+}
+
+.install-sheet-handle {
+    width: 44px;
+    height: 5px;
+    margin: 0 auto 20px;
+    border-radius: 5px;
+    background: #cad7d8;
+}
+
+.install-sheet-icon {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 18px;
+    border-radius: 14px;
+}
+
+.install-sheet-panel h2 {
+    margin-bottom: 16px;
+    color: #123c44;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.8rem;
+    font-weight: 500;
+    line-height: 1.08;
+}
+
+.install-sheet-panel ol {
+    display: grid;
+    gap: 13px;
+    margin: 0 0 24px;
+    padding-left: 22px;
+    color: #49656a;
+}
+
+.install-sheet-close {
+    width: 100%;
+    min-height: 52px;
+    border: 0;
+    border-radius: 5px;
+    background: #073f4a;
+    color: white;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.install-sheet-open {
+    overflow: hidden;
+}
+
 @media (max-width: 900px) {
     .activity-row {
         grid-template-columns: 90px 1fr;
@@ -1042,6 +1131,11 @@ body {
         flex-direction: column;
         align-items: end;
         gap: 5px;
+    }
+
+    .activities-install-button {
+        padding: 3px 0;
+        border: 0;
     }
 
     .activities-hero {

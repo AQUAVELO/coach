@@ -14,7 +14,7 @@ import pymysql
 import pymysql.cursors
 import os
 from urllib.parse import urlencode
-from datetime import datetime
+from datetime import datetime, timedelta
 import secrets
 import requests
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -24,10 +24,47 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import stripe
 
+def get_persistent_secret_key():
+    """Return a stable key so login cookies survive application restarts."""
+    configured_key = os.environ.get("SECRET_KEY", "").strip()
+    placeholder = "CHANGEZ_MOI_PAR_UNE_CLE_SECRETE"
+    if configured_key and placeholder not in configured_key:
+        return configured_key
+
+    secret_file = os.path.join(os.path.dirname(__file__), "instance", ".flask-secret-key")
+    os.makedirs(os.path.dirname(secret_file), exist_ok=True)
+
+    try:
+        with open(secret_file, "r", encoding="utf-8") as file:
+            saved_key = file.read().strip()
+            if saved_key:
+                return saved_key
+    except FileNotFoundError:
+        pass
+
+    generated_key = secrets.token_hex(32)
+    try:
+        file_descriptor = os.open(
+            secret_file,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+            0o600,
+        )
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as file:
+            file.write(generated_key)
+        return generated_key
+    except FileExistsError:
+        # Another Passenger worker may have created the key simultaneously.
+        with open(secret_file, "r", encoding="utf-8") as file:
+            return file.read().strip()
+
+
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+app.secret_key = get_persistent_secret_key()
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") == "production"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=90)
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True
 
 # Configuration Base de données (MySQL sur o2switch, SQLite en local)
 DB_HOST = os.environ.get('DB_HOST')
@@ -636,6 +673,15 @@ Administration : https://aquacoach.fr/admin
 # ============================================
 # AUTHENTICATION
 # ============================================
+
+
+@app.before_request
+def keep_existing_user_sessions():
+    """Upgrade existing authenticated users to the persistent cookie."""
+    if not session.permanent and (
+        session.get("client_logged_in") or session.get("nageur_id")
+    ):
+        session.permanent = True
 
 
 def login_required(f):
@@ -1771,6 +1817,7 @@ def submit_inscription_client():
         (nom, prenom, email, tel, ville, dept),
     )
 
+    session.permanent = True
     session["client_id"] = client_id
     session["client_dept"] = dept
 
@@ -1783,6 +1830,9 @@ def submit_inscription_client():
 @app.route("/client/login", methods=["GET", "POST"])
 def client_login():
     """Page de connexion client"""
+    if request.method == "GET" and session.get("client_logged_in"):
+        return redirect(url_for("choix_nageur"))
+
     if request.method == "POST":
         login = request.form.get("login")
         password = request.form.get("password")
@@ -1790,6 +1840,7 @@ def client_login():
         client = query_db("SELECT * FROM client WHERE login = ?", (login,), one=True)
 
         if client and check_password_hash(client["password_hash"], password):
+            session.permanent = True
             session["client_id"] = client["id"]
             session["client_dept"] = client["dept"]
             session["client_logged_in"] = True
@@ -1806,6 +1857,7 @@ def client_login():
 @app.route("/client/logout")
 def client_logout():
     """Déconnexion client"""
+    session.pop("_permanent", None)
     session.pop("client_id", None)
     session.pop("client_dept", None)
     session.pop("client_logged_in", None)
@@ -2156,6 +2208,7 @@ def submit_inscription_nageur():
         )
 
         # Connexion automatique après inscription
+        session.permanent = True
         session["nageur_id"] = nageur_id
         session["nageur_nom"] = f"{prenom} {nom}"
 
@@ -2202,6 +2255,9 @@ def remerciements_nageur(nageur_id):
 
 @app.route("/nageur/login", methods=["GET", "POST"])
 def nageur_login():
+    if request.method == "GET" and session.get("nageur_id"):
+        return redirect(url_for("mon_profil"))
+
     if request.method == "POST":
         login_input = request.form.get("login", "").strip().lower()
         password = request.form.get("password", "")
@@ -2211,6 +2267,7 @@ def nageur_login():
 
         if nageur:
             if check_password_hash(nageur["password_hash"], password):
+                session.permanent = True
                 session["nageur_id"] = nageur["id"]
                 session["nageur_nom"] = f"{nageur['prenom']} {nageur['nom']}"
                 flash(f"Bienvenue {nageur['prenom']} !", "success")
@@ -2251,6 +2308,7 @@ def nageur_reset_password():
 
 @app.route("/nageur/logout")
 def nageur_logout():
+    session.pop("_permanent", None)
     session.pop("nageur_id", None)
     session.pop("nageur_nom", None)
     flash("Vous avez été déconnecté.", "info")

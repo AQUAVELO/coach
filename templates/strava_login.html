@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connectez votre compte Strava à AquaCoach pour synchroniser vos activités sportives.">
+    <title>Connexion Strava | AquaCoach</title>
+    <link rel="canonical" href="https://aquacoach.fr/strava">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="strava-page">
+    <nav class="strava-nav">
+        <a href="{{ url_for('index') }}" class="strava-brand">AQUACOACH</a>
+        <a href="{{ url_for('index') }}" class="strava-home-link">Retour à l'accueil</a>
+    </nav>
+
+    <main class="strava-shell">
+        <section class="strava-image-panel">
+            <img src="{{ url_for('static', filename='images/coach-pool.png') }}"
+                 alt="Cours de natation AquaCoach">
+            <div class="strava-image-shade"></div>
+            <div class="strava-image-copy">
+                <p class="strava-kicker">AquaCoach x Strava</p>
+                <h1>Vos efforts dans l'eau, enfin réunis.</h1>
+                <p>Autorisez AquaCoach à consulter votre profil et vos activités Strava.</p>
+            </div>
+        </section>
+
+        <section class="strava-connect-panel">
+            <div class="strava-connect-content">
+                <div class="strava-pulse" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+                <p class="strava-eyebrow">Connexion sécurisée</p>
+                <h2>Connectez votre compte Strava</h2>
+                <p class="strava-intro">
+                    Vous serez redirigé vers Strava pour donner votre autorisation.
+                    Votre mot de passe Strava n'est jamais transmis à AquaCoach.
+                </p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="strava-alert strava-alert-{{ category }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <ul class="strava-permissions">
+                    <li>Lire votre profil Strava</li>
+                    <li>Consulter vos activités publiques et privées</li>
+                    <li>Synchroniser votre historique sportif</li>
+                </ul>
+
+                {% if strava_configured %}
+                    <a href="{{ url_for('strava_connect') }}" class="strava-button">
+                        <span class="strava-button-mark" aria-hidden="true">S</span>
+                        Se connecter avec Strava
+                        <span aria-hidden="true">→</span>
+                    </a>
+                {% else %}
+                    <button class="strava-button strava-button-disabled" type="button" disabled>
+                        Configuration Strava requise
+                    </button>
+                {% endif %}
+
+                <p class="strava-privacy">
+                    L'accès peut être révoqué à tout moment depuis les paramètres Strava.
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strava connecté | AquaCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="strava-result-page">
+    <main class="strava-result">
+        <div class="strava-result-check" aria-hidden="true">✓</div>
+        <p class="strava-eyebrow">Connexion terminée</p>
+        <h1>Votre compte Strava est connecté.</h1>
+        <p>
+            {% if athlete.firstname %}
+                Merci {{ athlete.firstname }}.
+            {% endif %}
+            AquaCoach peut maintenant synchroniser vos activités autorisées.
+        </p>
+        <div class="strava-result-actions">
+            <a href="{{ url_for('index') }}" class="strava-result-primary">Revenir à AquaCoach</a>
+            <a href="{{ url_for('strava_login') }}" class="strava-result-secondary">Reconnecter Strava</a>
+        </div>
+    </main>
+</body>
+</html>

@@ -12,8 +12,10 @@ import sqlite3
 import pymysql
 import pymysql.cursors
 import os
+from urllib.parse import urlencode
 from datetime import datetime
 import secrets
+import requests
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import smtplib
@@ -22,7 +24,9 @@ from email.mime.multipart import MIMEMultipart
 import stripe
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Configuration Base de données (MySQL sur o2switch, SQLite en local)
 DB_HOST = os.environ.get('DB_HOST')
@@ -43,6 +47,17 @@ STRIPE_PAYMENT_LINK = os.environ.get('STRIPE_PAYMENT_LINK', 'https://buy.stripe.
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
+
+# Configuration OAuth Strava
+STRAVA_CLIENT_ID = os.environ.get("STRAVA_CLIENT_ID")
+STRAVA_CLIENT_SECRET = os.environ.get("STRAVA_CLIENT_SECRET")
+STRAVA_REDIRECT_URI = os.environ.get(
+    "STRAVA_REDIRECT_URI",
+    "https://aquacoach.fr/auth/callback",
+)
+STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize"
+STRAVA_TOKEN_URL = "https://www.strava.com/api/v3/oauth/token"
+STRAVA_SCOPE = "read,activity:read_all,profile:read_all"
 
 # Identifiants admin (à changer en production !)
 ADMIN_USERNAME = "admin"
@@ -708,6 +723,83 @@ def execute_db(query, args=()):
         db.close()
 
 
+def save_strava_connection(token_data, accepted_scope):
+    """Enregistre les informations Strava et les jetons cote serveur."""
+    athlete = token_data.get("athlete") or {}
+    athlete_id = str(athlete.get("id") or "")
+
+    if not athlete_id:
+        raise ValueError("Identifiant athlete Strava manquant")
+
+    existing_athlete = query_db(
+        "SELECT athlete_id FROM strava_athlete WHERE athlete_id = ?",
+        (athlete_id,),
+        one=True,
+    )
+    athlete_values = (
+        athlete.get("firstname", ""),
+        athlete.get("lastname", ""),
+        athlete.get("profile", ""),
+        athlete.get("city", ""),
+        athlete.get("country", ""),
+        accepted_scope or token_data.get("scope", ""),
+    )
+
+    if existing_athlete:
+        execute_db(
+            """
+            UPDATE strava_athlete
+            SET firstname = ?, lastname = ?, profile = ?, city = ?, country = ?,
+                scope = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE athlete_id = ?
+            """,
+            athlete_values + (athlete_id,),
+        )
+    else:
+        execute_db(
+            """
+            INSERT INTO strava_athlete
+                (athlete_id, firstname, lastname, profile, city, country, scope)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (athlete_id,) + athlete_values,
+        )
+
+    existing_token = query_db(
+        "SELECT athlete_id FROM strava_token WHERE athlete_id = ?",
+        (athlete_id,),
+        one=True,
+    )
+    token_values = (
+        token_data["access_token"],
+        token_data["refresh_token"],
+        int(token_data["expires_at"]),
+        token_data.get("token_type", "Bearer"),
+    )
+
+    if existing_token:
+        execute_db(
+            """
+            UPDATE strava_token
+            SET access_token = ?, refresh_token = ?, expires_at = ?,
+                token_type = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE athlete_id = ?
+            """,
+            token_values + (athlete_id,),
+        )
+    else:
+        execute_db(
+            """
+            INSERT INTO strava_token
+                (athlete_id, access_token, refresh_token, expires_at, token_type)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (athlete_id,) + token_values,
+        )
+
+    return athlete_id, athlete
+
+
 def init_db():
     print("🛠️ Initialisation de la base de données...")
     os.makedirs(app.instance_path, exist_ok=True)
@@ -776,6 +868,30 @@ def init_db():
             nageur_id INTEGER NOT NULL,
             date_selection DATETIME DEFAULT CURRENT_TIMESTAMP
         )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS strava_athlete (
+            athlete_id VARCHAR(32) PRIMARY KEY,
+            firstname VARCHAR(120),
+            lastname VARCHAR(120),
+            profile TEXT,
+            city VARCHAR(160),
+            country VARCHAR(160),
+            scope TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS strava_token (
+            athlete_id VARCHAR(32) PRIMARY KEY,
+            access_token TEXT NOT NULL,
+            refresh_token TEXT NOT NULL,
+            expires_at BIGINT NOT NULL,
+            token_type VARCHAR(32) DEFAULT 'Bearer',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
         """
     ]
 
@@ -840,6 +956,92 @@ def index():
     nageurs = query_db("SELECT * FROM nageur WHERE is_active = 1 ORDER BY date_inscription DESC LIMIT 6")
     clients = query_db("SELECT * FROM client ORDER BY date_inscription DESC LIMIT 3")
     return render_template("index.html", nageurs=nageurs, clients=clients)
+
+
+@app.route("/strava")
+def strava_login():
+    """Page publique de connexion Strava."""
+    return render_template(
+        "strava_login.html",
+        strava_configured=bool(STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET),
+    )
+
+
+@app.route("/strava/connect")
+def strava_connect():
+    """Demarre le parcours OAuth Strava."""
+    if not STRAVA_CLIENT_ID or not STRAVA_CLIENT_SECRET:
+        flash(
+            "La connexion Strava n'est pas encore configuree sur le serveur.",
+            "danger",
+        )
+        return redirect(url_for("strava_login"))
+
+    state = secrets.token_urlsafe(32)
+    session["strava_oauth_state"] = state
+
+    params = {
+        "client_id": STRAVA_CLIENT_ID,
+        "redirect_uri": STRAVA_REDIRECT_URI,
+        "response_type": "code",
+        "approval_prompt": "force",
+        "scope": STRAVA_SCOPE,
+        "state": state,
+    }
+    return redirect(f"{STRAVA_AUTHORIZE_URL}?{urlencode(params)}")
+
+
+@app.route("/auth/callback")
+def strava_callback():
+    """Recoit le code Strava et l'echange contre les jetons OAuth."""
+    error = request.args.get("error")
+    if error:
+        flash("La connexion Strava a ete annulee.", "warning")
+        return redirect(url_for("strava_login"))
+
+    code = request.args.get("code")
+    returned_state = request.args.get("state", "")
+    expected_state = session.pop("strava_oauth_state", "")
+
+    if (
+        not code
+        or not expected_state
+        or not secrets.compare_digest(returned_state, expected_state)
+    ):
+        flash("La verification de securite Strava a echoue. Reessayez.", "danger")
+        return redirect(url_for("strava_login"))
+
+    try:
+        response = requests.post(
+            STRAVA_TOKEN_URL,
+            data={
+                "client_id": STRAVA_CLIENT_ID,
+                "client_secret": STRAVA_CLIENT_SECRET,
+                "code": code,
+                "grant_type": "authorization_code",
+            },
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+            },
+            timeout=20,
+        )
+        response.raise_for_status()
+        token_data = response.json()
+        athlete_id, athlete = save_strava_connection(
+            token_data,
+            request.args.get("scope", ""),
+        )
+    except (requests.RequestException, ValueError, KeyError) as exc:
+        app.logger.error("Echec OAuth Strava: %s", exc)
+        flash(
+            "Strava a autorise l'acces, mais le serveur n'a pas pu finaliser la connexion.",
+            "danger",
+        )
+        return redirect(url_for("strava_login"))
+
+    session["strava_athlete_id"] = athlete_id
+    return render_template("strava_success.html", athlete=athlete)
 
 
 @app.route("/inscription_client")

@@ -4,11 +4,11 @@
 
 # Activer Passenger (serveur WSGI pour Python)
 PassengerEnabled On
-PassengerAppRoot /home/VOTRE_USER/www/natation
+PassengerAppRoot /home/aquavelo/www/natation
 PassengerPython /usr/bin/python3
 
 # Logs Passenger
-PassengerAppLogFile /home/VOTRE_USER/logs/passenger_aquacoach.log
+PassengerAppLogFile /home/aquavelo/logs/passenger_aquacoach.log
 PassengerLogLevel 3
 
 # Moteur de réécriture

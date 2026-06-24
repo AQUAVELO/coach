@@ -877,18 +877,33 @@ def format_activity(activity):
     else:
         duration_label = "{} min {:02d}".format(minutes, seconds)
 
+    distance_meters = float(activity.get("distance") or 0)
+    sport_type = activity.get("sport_type") or activity.get("type")
+    pace_per_100m = None
+    if sport_type == "Swim" and distance_meters > 0 and moving_seconds > 0:
+        pace_seconds = int(round(moving_seconds * 100 / distance_meters))
+        pace_minutes, pace_remainder = divmod(pace_seconds, 60)
+        pace_per_100m = "{}:{:02d} /100 m".format(
+            pace_minutes,
+            pace_remainder,
+        )
+
     return {
         "id": activity.get("id"),
         "name": activity.get("name") or "Activite Strava",
         "type": type_labels.get(
-            activity.get("sport_type") or activity.get("type"),
-            activity.get("sport_type") or activity.get("type") or "Activite",
+            sport_type,
+            sport_type or "Activite",
         ),
+        "is_swim": sport_type == "Swim",
         "date": date_label,
-        "distance": round(float(activity.get("distance") or 0) / 1000, 2),
+        "distance": round(distance_meters / 1000, 2),
         "duration": duration_label,
         "elevation": round(float(activity.get("total_elevation_gain") or 0)),
+        "pace_per_100m": pace_per_100m,
+        "calories": activity.get("calories"),
         "average_heartrate": activity.get("average_heartrate"),
+        "max_heartrate": activity.get("max_heartrate"),
         "private": bool(activity.get("private")),
     }
 
@@ -1180,7 +1195,36 @@ def strava_activities():
             timeout=20,
         )
         response.raise_for_status()
-        activities = [format_activity(item) for item in response.json()]
+        activity_summaries = response.json()
+        activities = []
+
+        for summary in activity_summaries:
+            sport_type = summary.get("sport_type") or summary.get("type")
+            activity_data = summary
+
+            if sport_type == "Swim" and summary.get("id"):
+                try:
+                    detail_response = requests.get(
+                        "https://www.strava.com/api/v3/activities/{}".format(
+                            summary["id"]
+                        ),
+                        headers={
+                            "Authorization": "Bearer {}".format(access_token),
+                            "Accept": "application/json",
+                            "User-Agent": "AquaCoach/1.0 (+https://aquacoach.fr)",
+                        },
+                        timeout=20,
+                    )
+                    detail_response.raise_for_status()
+                    activity_data = detail_response.json()
+                except requests.RequestException as exc:
+                    app.logger.warning(
+                        "Detail Strava indisponible pour %s: %s",
+                        summary.get("id"),
+                        exc,
+                    )
+
+            activities.append(format_activity(activity_data))
     except (requests.RequestException, ValueError, KeyError) as exc:
         app.logger.error("Echec lecture activites Strava: %s", exc)
         flash(

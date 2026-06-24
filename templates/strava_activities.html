@@ -79,14 +79,33 @@
                                 <dt>Durée</dt>
                                 <dd>{{ activity.duration }}</dd>
                             </div>
-                            <div>
-                                <dt>Dénivelé</dt>
-                                <dd>{{ activity.elevation }} m</dd>
-                            </div>
+                            {% if activity.is_swim and activity.pace_per_100m %}
+                                <div>
+                                    <dt>Allure moyenne</dt>
+                                    <dd>{{ activity.pace_per_100m }}</dd>
+                                </div>
+                            {% elif activity.elevation %}
+                                <div>
+                                    <dt>Dénivelé</dt>
+                                    <dd>{{ activity.elevation }} m</dd>
+                                </div>
+                            {% endif %}
+                            {% if activity.calories is not none %}
+                                <div>
+                                    <dt>Calories</dt>
+                                    <dd>{{ activity.calories|round|int }} kcal</dd>
+                                </div>
+                            {% endif %}
                             {% if activity.average_heartrate %}
                                 <div>
-                                    <dt>Fréquence cardiaque</dt>
+                                    <dt>FC moyenne</dt>
                                     <dd>{{ activity.average_heartrate|round|int }} bpm</dd>
+                                </div>
+                            {% endif %}
+                            {% if activity.max_heartrate %}
+                                <div>
+                                    <dt>FC maximale</dt>
+                                    <dd>{{ activity.max_heartrate|round|int }} bpm</dd>
                                 </div>
                             {% endif %}
                         </dl>

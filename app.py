@@ -778,6 +778,35 @@ def execute_db(query, args=()):
         db.close()
 
 
+def persist_strava_oauth_state(state):
+    """Garde le state OAuth cote serveur pour les retours iPhone/PWA."""
+    cutoff = datetime.now() - timedelta(minutes=15)
+    execute_db("DELETE FROM strava_oauth_state WHERE created_at < ?", (cutoff,))
+    execute_db(
+        "INSERT INTO strava_oauth_state (state) VALUES (?)",
+        (state,),
+    )
+
+
+def consume_strava_oauth_state(state):
+    """Valide puis supprime un state OAuth Strava a usage unique."""
+    if not state:
+        return False
+
+    cutoff = datetime.now() - timedelta(minutes=15)
+    execute_db("DELETE FROM strava_oauth_state WHERE created_at < ?", (cutoff,))
+    row = query_db(
+        "SELECT state FROM strava_oauth_state WHERE state = ?",
+        (state,),
+        one=True,
+    )
+    if not row:
+        return False
+
+    execute_db("DELETE FROM strava_oauth_state WHERE state = ?", (state,))
+    return True
+
+
 def save_strava_connection(token_data, accepted_scope):
     """Enregistre les informations Strava et les jetons cote serveur."""
     athlete = token_data.get("athlete") or {}
@@ -1236,6 +1265,12 @@ def init_db():
         )
         """,
         """
+        CREATE TABLE IF NOT EXISTS strava_oauth_state (
+            state VARCHAR(128) PRIMARY KEY,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """,
+        """
         CREATE TABLE IF NOT EXISTS strava_notification_state (
             athlete_id VARCHAR(32) PRIMARY KEY,
             initialized_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -1358,7 +1393,9 @@ def strava_connect():
         return redirect(url_for("strava_login"))
 
     state = secrets.token_urlsafe(32)
+    session.permanent = True
     session["strava_oauth_state"] = state
+    persist_strava_oauth_state(state)
 
     params = {
         "client_id": STRAVA_CLIENT_ID,
@@ -1383,11 +1420,15 @@ def strava_callback():
     returned_state = request.args.get("state", "")
     expected_state = session.pop("strava_oauth_state", "")
 
-    if (
-        not code
-        or not expected_state
-        or not secrets.compare_digest(returned_state, expected_state)
-    ):
+    valid_state = False
+    if expected_state:
+        valid_state = secrets.compare_digest(returned_state, expected_state)
+        if valid_state:
+            consume_strava_oauth_state(returned_state)
+    else:
+        valid_state = consume_strava_oauth_state(returned_state)
+
+    if not code or not valid_state:
         flash("La verification de securite Strava a echoue. Reessayez.", "danger")
         return redirect(url_for("strava_login"))
 
